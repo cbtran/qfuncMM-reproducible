@@ -1,8 +1,4 @@
-suppressPackageStartupMessages(library(Rcpp))
 suppressPackageStartupMessages(library(ggplot2))
-suppressPackageStartupMessages(library(gapminder))
-suppressPackageStartupMessages(library(gganimate))
-suppressPackageStartupMessages(library(gifski))
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(readr))
 suppressPackageStartupMessages(library(ggpubr))
@@ -95,19 +91,19 @@ summary_3_region <- function(summary_list, rho_vec, ...) {
   pair_13 = summary_list$pair_13
   pair_23 = summary_list$pair_23
   
-  pair_12_summary <- cbind(rho.true=rho_vec[1],
-                           pair_12 %>% group_by(type) %>% summarise(RMSE=sqrt(mean((rho - rho_vec[1])^2)),
-                                                                    BiasAbs = abs(mean(rho) - rho_vec[1]),
+  pair_12_summary <- cbind(rho.true=rho_vec$rho12,
+                           pair_12 %>% group_by(type) %>% summarise(RMSE=sqrt(mean((rho - rho_vec$rho12)^2)),
+                                                                    BiasAbs = abs(mean(rho) - rho_vec$rho12),
                                                                     SD = sd(rho)))
-  pair_13_summary <- cbind(rho.true=rho_vec[2],
-                           pair_13 %>% group_by(type) %>% summarise(RMSE=sqrt(mean((rho - rho_vec[2])^2)),
-                                                                    BiasAbs = abs(mean(rho) - rho_vec[2]),
+  pair_13_summary <- cbind(rho.true=rho_vec$rho13,
+                           pair_13 %>% group_by(type) %>% summarise(RMSE=sqrt(mean((rho - rho_vec$rho13)^2)),
+                                                                    BiasAbs = abs(mean(rho) - rho_vec$rho13),
                                                                     SD = sd(rho)))
-  pair_23_summary <- cbind(rho.true=rho_vec[3],
-                           pair_23 %>% group_by(type) %>% summarise(RMSE=sqrt(mean((rho - rho_vec[3])^2)),
-                                                                    BiasAbs = abs(mean(rho) - rho_vec[3]),
+  pair_23_summary <- cbind(rho.true=rho_vec$rho23,
+                           pair_23 %>% group_by(type) %>% summarise(RMSE=sqrt(mean((rho - rho_vec$rho23)^2)),
+                                                                    BiasAbs = abs(mean(rho) - rho_vec$rho23),
                                                                     SD = sd(rho)))
   df <- rbind(pair_12_summary, pair_13_summary, pair_23_summary)
   
-  print(xtable(df,  digits = 4), include.rownames=FALSE, digits = 4)
+  #print(xtable(df,  digits = 4), include.rownames=FALSE, digits = 4)
 }

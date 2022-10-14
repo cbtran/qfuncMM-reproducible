@@ -108,6 +108,7 @@ pdf(paste0(output_dir, "/", setting, ".pdf"), width = 12, height = 12)
 box_plot_3_region(summary_list, rho_vec)
 invisible(dev.off())
 
+write.csv(summary_3_region(summary_list, rho_vec), paste0(output_dir, "/", setting, ".csv"), row.names = F)
 
 
 
