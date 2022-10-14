@@ -9,9 +9,11 @@ suppressPackageStartupMessages(library(xtable))
 suppressPackageStartupMessages(library(ggridges))
 
 output_dir <- "simulation-output/"
-true_rho = c(0.1, 0.35, 0.6)
-num_sims = 100
-M <- as.integer(commandArgs(trailingOnly = TRUE)[1])
+true_rho <- c(0.1, 0.35, 0.6)
+args <- commandArgs(trailingOnly = TRUE)
+
+M <- as.integer(args[1])
+num_sims <- as.integer(args[2])
 
 ####### Boxplot #######
 ########## Read data function ########################

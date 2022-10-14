@@ -13,4 +13,4 @@ do
     Rscript ./R_files/simulation.R $signal $intra $L $sidelength $M $num_sim $K
   done
 done
-Rscript ./R_files/summary_all.R $M
+Rscript ./R_files/summary_all.R $M $num_sim
