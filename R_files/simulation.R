@@ -2,12 +2,12 @@ args <- commandArgs(trailingOnly = TRUE)
 
 signal <- switch(args[1],
                  "0.5" = "weak",
-                 "1" = "med",
-                 "1.5" = "strong")
+                 "1" = "strong",
+                 "1.5" = "verystrong")
 intra <- switch(args[2],
                 "1" = "weak",
-                "1/2" = "med",
-                "1/4" = "strong")
+                "1/2" = "strong",
+                "1/4" = "verystrong")
 
 setting <- paste0(signal, "-signal-", intra, "-intra")
 source(paste0("simulation_setting/", setting, ".R"))
@@ -25,12 +25,9 @@ K <- as.integer(args[7])
 kernel_type = "matern_5_2"
 
 # Generate voxels for each region
-set.seed(1)
-vxlID_1 <- sample(1:(side_length^3), L, replace = FALSE)
-set.seed(2)
-vxlID_2 <- sample(1:(side_length^3), L, replace = FALSE)
-set.seed(4)
-vxlID_3 <- sample(1:(side_length^3), L, replace = FALSE)
+vxlID_1 <- read_csv(paste0("simulation-data/", setting, "/vxlID_1.csv"), show_col_types = FALSE)$x
+vxlID_2 <- read_csv(paste0("simulation-data/", setting, "/vxlID_2.csv"), show_col_types = FALSE)$x
+vxlID_3 <- read_csv(paste0("simulation-data/", setting, "/vxlID_3.csv"), show_col_types = FALSE)$x
 
 dist_sqrd_mat_region1 <- get_dist_sqrd_mat(L, side_length, vxlID_1)
 dist_sqrd_mat_region2 <- get_dist_sqrd_mat(L, side_length, vxlID_2)
@@ -41,35 +38,12 @@ time_sqrd_mat <- (outer(1:M, 1:M, "-"))^2
 # Use different folder name to store results from different simulations.
 # Folder name.
 fdrName <-  paste0("simulation-data/", setting)
-dir.create(file.path("simulation-data", setting), recursive = TRUE)
 # Save data
-write.csv(parameters_true, paste0(fdrName, "/parameters-true.csv")) 
 write.csv(rho_vec, paste0(fdrName, "/rho_true.csv")) 
-write.csv(vxlID_1, paste0(fdrName, "/vxlID_1.csv")) 
-write.csv(vxlID_2, paste0(fdrName, "/vxlID_2.csv")) 
-write.csv(vxlID_3, paste0(fdrName, "/vxlID_3.csv")) 
 
 
 # Simulate data 
-simulated_data = simulate_3_region(L1=L,
-                                   L2=L,
-                                   L3=L,
-                                   side_length=side_length,
-                                   M=M,
-                                   theta=parameters_true,
-                                   rho_vec=rho_vec,
-                                   sigma_sqrd=1,
-                                   mu_1=rep(parameters_true$mu_1, M),
-                                   mu_2=rep(parameters_true$mu_2, M),
-                                   mu_3=rep(parameters_true$mu_3, M),
-                                   vxlID_1=vxlID_1,
-                                   vxlID_2=vxlID_2,
-                                   vxlID_3=vxlID_3,
-                                   random_seed=1,
-                                   num_sim=num_sim,
-                                   out_folder_name=fdrName,
-                                   plot_it=T,
-                                   C_kernel_type="matern_5_2")
+simulated_data = readRDS(paste0("simulation-data/", setting, "/sim-data.rds"))
 # Create result list
 result_list <- list()
 
