@@ -26,7 +26,7 @@ Rscript ./R_files/install_dependencies.R
 
 # Replicate 1 simulation setting
 
-Each script in `simulation_setting` contains information for 1 simulation setting. You can specify signal strength, intra-correlation, number of voxels in each region, side length of 3D lattice, number of timepoints, number of simulation, and number of B-spline basis. 
+Each script in `simulation_setting` contains information for 1 simulation setting. You can specify signal strength, intra-correlation, number of voxels in each region, side length of 3D lattice, number of timepoints, number of simulation, and number of B-spline basis as mentioned in the manuscript. 
 The order of command line input is:
 1. k_eta
 2. phi_gamma
@@ -36,10 +36,10 @@ The order of command line input is:
 6. number of replications
 7. number of bspline basis
 
-For example, to run 10 simulations with weak signal `k_eta = 0.5`, weak intra-correlation `phi_gamma = 1`, 20 voxels `L=20`, side length 7, 30 timepoints `M=30`, and 15 B-splines basis, run the following in terminal console while inside `qfuncMM-reproducible` folder
+For example, to run 10 simulations with weak signal `k_eta = 0.5`, weak intra-correlation `phi_gamma = 1`, 50 voxels `L=50`, side length 7, 60 timepoints `M=60`, and 45 B-splines basis, run the following in terminal console while inside `qfuncMM-reproducible` folder
  
 ```
-Rscript ./R_files/simulation.R 0.5 1 20 7 30 10 15
+Rscript ./R_files/simulation.R 0.5 1 50 7 60 10 45
 ```
 
 # Replicate all simulation setting
