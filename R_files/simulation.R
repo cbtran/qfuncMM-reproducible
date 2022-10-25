@@ -6,8 +6,7 @@ signal <- switch(args[1],
                  "1.5" = "verystrong")
 intra <- switch(args[2],
                 "1" = "weak",
-                "1/2" = "strong",
-                "1/4" = "verystrong")
+                "1/4" = "strong")
 
 setting <- paste0(signal, "-signal-", intra, "-intra")
 source(paste0("simulation_setting/", setting, ".R"))
