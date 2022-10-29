@@ -2,8 +2,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 signal <- switch(args[1],
                  "0.5" = "weak",
-                 "1" = "strong",
-                 "1.5" = "verystrong")
+                 "1" = "med",
+                 "1.5" = "strong")
 intra <- switch(args[2],
                 "1" = "weak",
                 "1/4" = "strong")
