@@ -67,7 +67,7 @@ med_weak <- cbind(create_boxplot(med_signal.weak_intra, "med_signal_weak_intra")
 
 # med signal - strong intra
 med_signal.strong_intra <- read_results(paste0(output_dir, "med-signal-strong-intra"))
-med_strong <- cbind(create_boxplot(med_signal.strong_intra, "med_signal_strong_intra"), signal = "stron", intra="strong")
+med_strong <- cbind(create_boxplot(med_signal.strong_intra, "med_signal_strong_intra"), signal = "strong", intra="strong")
 
 ################### Strong signal ###############3
 
