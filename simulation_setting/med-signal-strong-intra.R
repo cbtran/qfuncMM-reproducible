@@ -2,7 +2,7 @@
 rho_vec <- data.frame(rho12=0.1, rho13=0.35, rho23=0.6)
 # Parameters
 parameters_true <-  data.frame(tau_eta = 1/4,
-                               k_eta = 0.5,
+                               k_eta = 1,
                                
                                phi_gamma_1=1/4,
                                tau_gamma_1=1/2, 
