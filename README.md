@@ -1,6 +1,6 @@
 # qfuncMM-reproduce
 
-This repository contains R codes to reproduce the simulation results in our paper [Quantifying brain functional connectivity with noisy voxel-level signals](https://arxiv.org/) paper.
+This repository contains R codes to reproduce the simulation results in our paper [A Mixed Model Approach for Estimating Regional Functional Connectivity from Voxel-level BOLD Signals](https://arxiv.org/abs/2211.02192).
 
 ## Overview
 
