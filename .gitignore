@@ -1,3 +1,6 @@
+# Simulation files
+simulation-output/
+
 # Prerequisites
 *.d
 *.Rbuildignore

@@ -43,14 +43,9 @@ write.csv(rho_vec, paste0(fdrName, "/rho_true.csv"))
 
 # Simulate data 
 simulated_data = readRDS(paste0("simulation-data/", setting, "/sim-data.rds"))
-# Create result list
-result_list <- list()
 
-# Loop through each simulation
-for (xx in 1:num_sim){
-  result_list[[xx]] <- opt_simulation_3region (xx)
-  cat(paste0("Done sim:", xx, "\n"))
-}
+# TODO: make parallel configurable
+result_list <- parallel::mclapply(seq_len(num_sim), opt_simulation_3region, mc.cores = 10L)
 
 # Rho Pearson's
 rho_pearson = matrix(unlist(sapply(result_list, get, x="rho_pearson")), byrow = T, nrow=num_sim)
@@ -82,9 +77,4 @@ box_plot_3_region(summary_list, rho_vec)
 invisible(dev.off())
 
 write.csv(summary_3_region(summary_list, rho_vec), paste0(output_dir, "/", setting, ".csv"), row.names = F)
-
-
-
-
-
 

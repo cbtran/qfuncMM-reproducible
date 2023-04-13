@@ -1,4 +1,6 @@
 opt_simulation_3region <- function(k) {
+  cat(paste0("Begin sim:", k, "\n"))
+
   Y <- simulated_data[[k]]
   L1 <- L
   L2 <- L
@@ -156,6 +158,9 @@ opt_simulation_3region <- function(k) {
                       result_pair_23_theta[2:4])
   
   colnames(inter_para) <- c("tauEta", "kEta", "nugget")
+
+  cat(paste0("Done sim:", k, "\n"))
+
   list(rho_pearson=results_pearson, 
               rho_inter=rho_inter,
               asymp_var_inter=asymp_var_inter,
