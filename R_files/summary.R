@@ -10,22 +10,38 @@ suppressPackageStartupMessages(library(ggridges))
 
 ########## Read data function ########################
 read_results <- function(result_folder) {
-  rho_pearson <- suppressMessages(read_csv(paste0(result_folder, "/rho_pearson.csv"), show_col_types = FALSE)[-1])
-  rho_inter <- suppressMessages(read_csv(paste0(result_folder, "/rho_inter.csv"), show_col_types = FALSE)[-1])
-  pair.12 <- data.frame(type=factor(c(rep(c("REML", "Intra", "Vanilla"), each=num_sim)),
-                                    levels=c("REML", "Intra", "Vanilla")),
-                        rho=c(rho_inter$rho_12, rho_pearson$cor_intra_12, rho_pearson$cor_vanilla_12))
-  
-  pair.13 <- data.frame(type=factor(c(rep(c("REML", "Intra", "Vanilla"), each=num_sim)),
-                                    levels=c("REML", "Intra", "Vanilla")),
-                        rho=c(rho_inter$rho_13, rho_pearson$cor_intra_13, rho_pearson$cor_vanilla_13))
-  
-  pair.23 <- data.frame(type=factor(c(rep(c("REML", "Intra", "Vanilla"), each=num_sim)),
-                                    levels=c("REML", "Intra", "Vanilla")),
-                        rho=c(rho_inter$rho_23, rho_pearson$cor_intra_23, rho_pearson$cor_vanilla_23))
+  rho_pearson <- suppressMessages(
+    read_csv(file.path(result_folder, "rho_pearson.csv"),
+    show_col_types = FALSE))
+
+  rho_inter <- suppressMessages(
+    read_csv(file.path(result_folder, "rho_inter.csv"),
+    show_col_types = FALSE))
+
+  rho_true <- suppressMessages(
+    read_csv(file.path(result_folder, "rho_true.csv"),
+    show_col_types = FALSE))
+
+  num_sim <- nrow(rho_pearson)
+  rhotype <- factor(
+    rep(c("REML", "Intra", "Vanilla"), each = num_sim),
+    levels = c("REML", "Intra", "Vanilla"))
+
+  pair.12 <- data.frame(
+    type = rhotype,
+    rho = c(rho_inter$rho_12, rho_pearson$cor_intra_12, rho_pearson$cor_vanilla_12))
+
+  pair.13 <- data.frame(
+    type = rhotype,
+    rho = c(rho_inter$rho_13, rho_pearson$cor_intra_13, rho_pearson$cor_vanilla_13))
+
+  pair.23 <- data.frame(
+    type = rhotype,
+    rho = c(rho_inter$rho_23, rho_pearson$cor_intra_23, rho_pearson$cor_vanilla_23))
+
   pair.all <- cbind(rbind(pair.12, pair.13, pair.23),
-                    inter=factor(c(rep(as.character(rho_vec), each=3*num_sim)),
-                                 levels=as.character(rho_vec)))
+                    inter=factor(c(rep(as.character(rho_true), each=3*num_sim)),
+                                 levels=as.character(rho_true)))
   list(pair_12=pair.12, pair_13=pair.13, pair_23=pair.23, pair_all=pair.all)
 }
 
