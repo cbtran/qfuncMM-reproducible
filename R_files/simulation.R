@@ -31,7 +31,8 @@ source("R_files/summary.R")
 
 n_voxel <- as.integer(args[3])
 side_length <- as.integer(args[4])
-n_timept <- as.integer(args[5])
+# n_timept <- as.integer(args[5])
+n_timept <- 60 # number of time points is fixed from simulation data
 num_sim <- as.integer(args[6])
 n_bspline <- as.integer(args[7])
 

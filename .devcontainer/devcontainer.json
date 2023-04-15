@@ -31,7 +31,10 @@
 				"RDebugger.r-debugger",
 				"quarto.quarto",
 				"tomoki1207.pdf",
-				"llvm-vs-code-extensions.vscode-clangd"
+				"llvm-vs-code-extensions.vscode-clangd",
+				"GitHub.copilot",
+				"gruntfuggly.todo-tree",
+				"eamodio.gitlens"
 			]
 		}
 	}
