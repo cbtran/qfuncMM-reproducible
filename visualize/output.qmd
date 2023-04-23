@@ -1,0 +1,86 @@
+---
+title: "Simulation results"
+format: html
+---
+
+```{r}
+#| include: false
+
+library(tidyverse)
+library(kableExtra)
+source('~/work/R_files/summary.R')
+```
+
+# Boxplots of estimated correlation coefficients
+
+100 simulations were run for each setting.
+
+::: {.panel-tabset}
+
+## Weak signal, weak intra
+
+```{r}
+weak_weak_dir <- file.path("simulation-output", "weak-signal-weak-intra")
+weak_weak_dir <- paste0("~/work/", weak_weak_dir)
+rho_true <- read_csv(
+    file.path(weak_weak_dir, "rho_true.csv"), show_col_types = FALSE)
+weak_weak <- read_results(weak_weak_dir)
+box_plot_3_region(weak_weak, rho_true)
+```
+
+## Weak signal, strong intra
+
+```{r}
+weak_strong_dir <- file.path("simulation-output", "weak-signal-strong-intra")
+weak_strong_dir <- paste0("~/work/", weak_strong_dir)
+rho_true <- read_csv(
+    file.path(weak_strong_dir, "rho_true.csv"), show_col_types = FALSE)
+weak_strong <- read_results(weak_strong_dir)
+box_plot_3_region(weak_strong, rho_true)
+```
+
+## Medium signal, weak intra
+
+```{r}
+medium_weak_dir <- file.path("simulation-output", "med-signal-weak-intra")
+medium_weak_dir <- paste0("~/work/", medium_weak_dir)
+rho_true <- read_csv(
+    file.path(medium_weak_dir, "rho_true.csv"), show_col_types = FALSE)
+medium_weak <- read_results(medium_weak_dir)
+box_plot_3_region(medium_weak, rho_true)
+```
+
+## Medium signal, strong intra
+
+```{r}
+medium_strong_dir <- file.path("simulation-output", "med-signal-strong-intra")
+medium_strong_dir <- paste0("~/work/", medium_strong_dir)
+rho_true <- read_csv(
+    file.path(medium_strong_dir, "rho_true.csv"), show_col_types = FALSE)
+medium_strong <- read_results(medium_strong_dir)
+box_plot_3_region(medium_strong, rho_true)
+```
+
+## Strong signal, weak intra
+
+```{r}
+strong_weak_dir <- file.path("simulation-output", "strong-signal-weak-intra")
+strong_weak_dir <- paste0("~/work/", strong_weak_dir)
+rho_true <- read_csv(
+    file.path(strong_weak_dir, "rho_true.csv"), show_col_types = FALSE)
+strong_weak <- read_results(strong_weak_dir)
+box_plot_3_region(strong_weak, rho_true)
+```
+
+## Strong signal, strong intra
+
+```{r}  
+strong_strong_dir <- file.path("simulation-output", "strong-signal-strong-intra")
+strong_strong_dir <- paste0("~/work/", strong_strong_dir)
+rho_true <- read_csv(
+    file.path(strong_strong_dir, "rho_true.csv"), show_col_types = FALSE)
+strong_strong <- read_results(strong_strong_dir)
+box_plot_3_region(strong_strong, rho_true)
+```
+
+:::

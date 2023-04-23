@@ -68,7 +68,7 @@ simulate_single <- function(sim_id) {
 
 # TODO: make parallel optional
 result_list <- parallel::mclapply(
-    seq_len(num_sim), simulate_single, mc.cores = 10L)
+    seq_len(num_sim), simulate_single, mc.cores = 20L)
 
 # Rho Pearson's
 rho_pearson <- as_tibble(reduce(lapply(result_list, \(x) x$rho_pearson), rbind))
