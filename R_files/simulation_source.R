@@ -1,3 +1,17 @@
+to_coords <- function(idx, side_len) {
+  z <- idx %% side_len
+  y <- idx %/% side_len
+  x <- idx %/% (side_len^2)
+  return(cbind(x, y, z))
+}
+
+get_dist_sqrd_mat <- function(n_voxel, side_length, ids) {
+  coords <- to_coords(ids, side_length)
+  dist_mat <- as.matrix(dist(coords))
+  return(dist_mat^2)
+}
+
+
 opt_simulation_3region <- function(
     data, voxids, side_length, n_voxel, n_timept, n_bspline,
     kernel_type = "matern_5_2") {
@@ -35,7 +49,7 @@ opt_simulation_3region <- function(
   mean_plus_eta_R1 <- predict(fitR1, data.frame(time=1:n_timept))
   mean_plus_eta_R2 <- predict(fitR2, data.frame(time=1:n_timept))
   mean_plus_eta_R3 <- predict(fitR3, data.frame(time=1:n_timept))
-  
+
   results_pearson$cor_bspline_12 <- cor(mean_plus_eta_R1, mean_plus_eta_R2)
   results_pearson$cor_bspline_13 <- cor(mean_plus_eta_R1, mean_plus_eta_R3)
   results_pearson$cor_bspline_23 <- cor(mean_plus_eta_R2, mean_plus_eta_R3)
@@ -44,7 +58,7 @@ opt_simulation_3region <- function(
   dist_sqrd_mat_region2 <- get_dist_sqrd_mat(n_voxel, side_length, voxids[, 2])
   dist_sqrd_mat_region3 <- get_dist_sqrd_mat(n_voxel, side_length, voxids[, 3])
   time_sqrd_mat <- (outer(1:n_timept, 1:n_timept, "-"))^2
-  
+
   # Intra-regional model
   ## Initilize fixed effect parameters
   G_region <- bs(rep(1:n_timept, L1), df=n_bspline, intercept=T)
@@ -63,81 +77,81 @@ opt_simulation_3region <- function(
   eta_1 <- c(G_region[1:n_timept,] %*% nu_1)
   var_eta_1 <- var(eta_1)
   ############
-  
+
   ### Region 2
   parametersInit_region2 <- c(0, 0, 0, coef(fitR2))
   result_region2 <- opt_intra(parametersInit_region2,
                                               X_Region2, G_region,
                                               dist_sqrd_mat_region2, time_sqrd_mat,
                                               L2, n_timept, kernel_type)
-  
+
   #Region 2 results
   region2_para <- result_region2$theta
   nu_2 = result_region2$nu
   eta_2 <- c(G_region[1:n_timept,] %*% nu_2)
   var_eta_2 <- var(eta_2)
   ############
-  
+
   ### Region 3
   parametersInit_region3 <- c(0, 0, 0, coef(fitR3))
   result_region3 <- opt_intra(parametersInit_region3,
                                               X_Region3, G_region,
                                               dist_sqrd_mat_region3, time_sqrd_mat,
                                               L3, n_timept, kernel_type)
-  
+
   #Region 2 results
   region3_para <- result_region3$theta
   nu_3 = result_region3$nu
   eta_3 <- c(G_region[1:n_timept,] %*% nu_3)
   var_eta_3 <- var(eta_3)
   ############
-  
+
   # Cor Intra
   results_pearson$cor_intra_12 <-  cor(eta_1, eta_2)
   results_pearson$cor_intra_13 <-  cor(eta_1, eta_3)
   results_pearson$cor_intra_23 <-  cor(eta_2, eta_3)
-  
-  
+
+
   # Inter-regional model
   Z <- matrix(c(rep(c(1,0), each = (L1*n_timept)),
                 rep(c(0,1), each = (L2*n_timept))), (L1+L2)*n_timept, 2)
-  
+
   ## Pair 1-2
   gamma_vec_12 <- c(region1_para, region2_para)
   parametersInit_pair_12 <- c(0, 0, 0, -2, mean(X_R1_avg), mean(X_R2_avg))
 
   result_pair_12 <- opt_inter(parametersInit_pair_12,
-                                      matrix(c(X_Region1, X_Region2), ncol=1), 
+                                      matrix(c(X_Region1, X_Region2), ncol=1),
                                       Z,
                                       dist_sqrd_mat_region1,
                                       dist_sqrd_mat_region2,
                                       time_sqrd_mat, gamma_vec_12,
                                       kernel_type)
-  
+
   result_pair_12_theta <- result_pair_12$theta
   cat(paste0("REML rho_12: ", result_pair_12_theta[1]))
   cat("\n")
-  
+
   ## Pair 1-3
   gamma_vec_13 <- c(region1_para, region3_para)
   parametersInit_pair_13 <- c(0, 0, 0, -2, mean(X_R1_avg), mean(X_R3_avg))
   result_pair_13 <- opt_inter(parametersInit_pair_13,
-                                      matrix(c(X_Region1, X_Region3), ncol=1), 
+                                      matrix(c(X_Region1, X_Region3), ncol=1),
                                       Z,
                                       dist_sqrd_mat_region1,
                                       dist_sqrd_mat_region3,
                                       time_sqrd_mat, gamma_vec_13,
                                       kernel_type)
-  
+
   result_pair_13_theta <- result_pair_13$theta
   cat(paste0("REML rho_13: ", result_pair_13_theta[1]))
   cat("\n")
-  
+
   ## Pair 1-3
   gamma_vec_23 <- c(region2_para, region3_para)
   parametersInit_pair_23 <- c(0, 0, 0, -2, mean(X_R2_avg), mean(X_R3_avg))
   result_pair_23 <- opt_inter(parametersInit_pair_23,
-                                      matrix(c(X_Region2, X_Region3), ncol=1), 
+                                      matrix(c(X_Region2, X_Region3), ncol=1),
                                       Z,
                                       dist_sqrd_mat_region2,
                                       dist_sqrd_mat_region3,

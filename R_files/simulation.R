@@ -36,21 +36,9 @@ n_timept <- 60 # number of time points is fixed from simulation data
 num_sim <- as.integer(args[6])
 n_bspline <- as.integer(args[7])
 
-# Generate voxels for each region
-sampled_voxel_ids <- c()
-suppressMessages({
-    vxlID_1 <- read_csv(
-        file.path("simulation-data", setting, "vxlID_1.csv"),
-        show_col_types = FALSE, col_select = -1)
-    vxlID_2 <- read_csv(
-        file.path("simulation-data", setting, "vxlID_2.csv"),
-        show_col_types = FALSE, col_select = -1)
-    vxlID_3 <- read_csv(
-        file.path("simulation-data", setting, "vxlID_3.csv"),
-        show_col_types = FALSE, col_select = -1)
-    sampled_voxel_ids <- cbind(vxlID_1, vxlID_2, vxlID_3)
-    colnames(sampled_voxel_ids) <- c("x1", "x2", "x3")
-})
+sampled_voxel_ids <- read_csv(
+    file.path("simulation-data", setting, "voxel_ids.csv"),
+    show_col_types = FALSE)
 
 # Simulate data
 simulated_data <- readRDS(file.path("simulation-data", setting, "sim-data.rds"))
@@ -66,9 +54,12 @@ simulate_single <- function(sim_id) {
     result
 }
 
+# tictoc::tic()
+
 # TODO: make parallel optional
-result_list <- parallel::mclapply(
-    seq_len(num_sim), simulate_single, mc.cores = 20L)
+result_list <- parallel::mclapply(seq_len(num_sim), simulate_single)
+
+# tictoc::toc()
 
 # Rho Pearson's
 rho_pearson <- as_tibble(reduce(lapply(result_list, \(x) x$rho_pearson), rbind))
