@@ -23,6 +23,7 @@
 			"settings": { 
 				"python.defaultInterpreterPath": "/opt/conda/bin/python",
 				"r.rterm.linux": "/opt/conda/bin/radian",
+				"r.rpath.linux": "/usr/local/bin/R",
 				"r.bracketedPaste": true,
 				"r.plot.useHttpgd": true
 			},

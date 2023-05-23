@@ -1,4 +1,4 @@
-FROM rocker/verse:4.2
+FROM rocker/verse:4.3
 
 ### install python
 # copy from jupyter stacks
@@ -11,8 +11,7 @@ ENV PATH /opt/conda/bin:$PATH
 RUN curl --silent -L --fail \
         https://github.com/quarto-dev/quarto-cli/releases/download/v1.2.269/quarto-1.2.269-linux-amd64.deb > /tmp/quarto.deb && \
     apt update && \
-    apt install -y --no-install-recommends /tmp/quarto.deb && \
-    apt install -y --no-install-recommends tmux
+    apt install -y --no-install-recommends /tmp/quarto.deb tmux
 
 USER rstudio
 
@@ -21,6 +20,6 @@ RUN pip install radian && \
     installGithub.r ManuelHentschel/vscDebugger cbtran/qfuncMM@dev
 
 
-RUN install2.r RcppEigen ggpubr corrplot latex2exp Matrix xtable ggridges kableExtra
+RUN install2.r ggpubr corrplot latex2exp Matrix xtable ggridges kableExtra tictoc
 
 USER root

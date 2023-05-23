@@ -1,5 +1,6 @@
 # Simulation files
 simulation-output/
+.vscode/
 
 # Prerequisites
 *.d
