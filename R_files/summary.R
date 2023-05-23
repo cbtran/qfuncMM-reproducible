@@ -1,12 +1,9 @@
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(readr)
-  library(ggpubr)
-  library(corrplot)
-  library(Matrix)
-  library(xtable)
-  library(ggridges)
-})
+library(tidyverse)
+library(ggpubr)
+library(corrplot)
+library(Matrix)
+library(xtable)
+library(ggridges)
 
 ########## Read data function ########################
 read_results <- function(result_folder) {
@@ -47,43 +44,32 @@ read_results <- function(result_folder) {
        pair23 = pair23)
 }
 
-########## Plot function ########################
-box_plot_3_region <- function(result_list, true_corr) {
-  pair_13 <- result_list$pair13
-  pair_23 <- result_list$pair23
+boxplot_3_region <- function(results, true_corr) {
 
-  pair12_plot <- ggplot(result_list$pair12) +
-    geom_boxplot(aes(y = corr, x = fct_rev(corrtype), fill = corrtype)) +
-    geom_hline(yintercept = true_corr$rho12,
-               color = "red", linetype = "dashed") +
-    ylim(-1, 1) +
-    coord_flip() +
-    labs(y = expression(rho),
-         x = NULL) +
-    theme_bw()
+  plot_region  <- function(region, true_corr_region) {
+    tidyr::pivot_longer(region, cols = c("Intra", "CA", "bCA", "qfunc"),
+                names_to = "corrtype", values_to = "corr") |>
+      ggplot(aes(x = fct_rev(corrtype), y = corr, fill = corrtype)) +
+      geom_boxplot() +
+      geom_hline(yintercept = true_corr_region,
+                color = "red", linetype = "dashed") +
+      ylim(-1, 1) +
+      coord_flip() +
+      labs(y = expression(rho),
+          x = NULL) +
+      theme_bw()
+  }
 
-  pair13_plot <- ggplot(pair_13) +
-    geom_boxplot(aes(y = corr, x = fct_rev(corrtype), fill = corrtype)) +
-    geom_hline(yintercept = true_corr$rho13,
-               color = "red", linetype = "dashed") +
-    ylim(-1, 1) +
-    coord_flip() +
-    labs(y = expression(rho),
-         x = NULL) +
-    theme_bw()
+  pair12 <- plot_region(
+    select(as.data.frame(results$r12), -asympvar), true_corr$rho12)
+  pair13 <- plot_region(
+    select(as.data.frame(results$r13), -asympvar), true_corr$rho13)
+  pair23 <- plot_region(
+    select(as.data.frame(results$r23), -asympvar), true_corr$rho23)
 
-  pair23_plot <- ggplot(pair_23) +
-    geom_boxplot(aes(y = corr, x = fct_rev(corrtype), fill = corrtype)) +
-    geom_hline(yintercept = true_corr$rho23,
-               color = "red", linetype = "dashed") +
-    ylim(-1, 1) +
-    coord_flip() +
-    labs(y = expression(rho),
-         x = NULL) +
-    theme_bw()
-
-  ggarrange(pair12_plot, pair13_plot, pair23_plot, legend = "none", ncol = 1)
+  ggarrange(pair12, pair13, pair23, legend = "none", ncol = 1)
 }
+
 
 hist_1_pair <- function(pairdf, title, true_corr) {
   ggplot(pairdf,
@@ -133,5 +119,5 @@ summary_3_region <- function(summary_list, true_corr) {
 
 
 
-  
+
 }
