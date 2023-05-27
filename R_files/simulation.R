@@ -44,7 +44,7 @@ simulate_single <- function(simid) {
   ca23 <- corr_of_avgs(region_list[[2]], region_list[[3]])
 
   cat("Simulation", simid, "\n")
-  result <- qfunc(region_list, voxel_coords, n_basis = 45)
+  result <- qfuncmm(region_list, voxel_coords, n_basis = 45)
   cat("Finished simulation", simid, "\n")
 
   list(result = result,

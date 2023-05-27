@@ -39,7 +39,7 @@ head(voxel_coords[[1]]) # spatial coordinates of first few voxels
 
 The entire analysis is done in a single function call:
 ```{r}
-result <- qfunc(region_list, voxel_coords, n_basis = 45)
+result <- qfuncmm(region_list, voxel_coords, n_basis = 45)
 str(result)
 ```
 

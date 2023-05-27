@@ -67,6 +67,6 @@ str(sim)
 
 Run the analysis on the simulated data.
 ```{r}
-fit <- qfunc(sim, voxel_coords, n_basis = 10)
+fit <- qfuncmm(sim, voxel_coords, n_basis = 10)
 fit
 ```
