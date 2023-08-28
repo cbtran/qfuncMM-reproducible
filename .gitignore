@@ -1,5 +1,6 @@
 # Simulation files
 simulation-output/
+rat-data-coords/
 .vscode/
 .lintr
 

@@ -20,9 +20,9 @@ get_cor_mat <- function(kernel_type, distsqrd_mat, rate) {
 #' @param n_timept number of timepoints
 #' @param true_corr vector of inter-regional correlations (r12, r13, r23)
 #' @param shared_params vector of parameters shared across regions (tau_eta, k_eta, nugget)
-#' @param region_params 3 x 4 dataframe of region-specific parameters.
+#' @param region_params 3 x 5 dataframe of region-specific parameters.
 #'    rows (region 1, region 2, region 3)
-#'    columns (phi_gamma, tau_gamma, k_gamma, mean)
+#'    columns (phi_gamma, tau_gamma, k_gamma, nugget_gamma, mean)
 #' @param sigma2 noise variance
 #' @param c_kernel_type Choice of spatial kernel. Defaul "matern_5_2".
 #' @return obs_signal Simulated signal
@@ -33,7 +33,7 @@ generate_3_region <- function(
   stopifnot(n_timept >= 1)
   stopifnot(length(true_corr) == 3)
   stopifnot(length(shared_params) == 3)
-  stopifnot(nrow(region_params) == 3 && ncol(region_params) == 4)
+  stopifnot(nrow(region_params) == 3 && ncol(region_params) == 5)
   stopifnot(sigma2 >= 0)
   stopifnot(c_kernel_type %in% c("matern_5_2", "rbf"))
 
@@ -63,20 +63,24 @@ generate_3_region <- function(
   phi_gamma <- region_params$phi_gamma
   tau_gamma <- region_params$tau_gamma
   k_gamma <- region_params$k_gamma
+  nugget_gamma <- region_params$nugget_gamma
 
   ## Region 1
   C1 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region1, phi_gamma[1])
-  B1 <- k_gamma[1] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[1])
+  B1 <- k_gamma[1] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[1]) +
+    nugget_gamma[1] * diag(n_timept)
   gamma_sigma1 <- kronecker(C1, B1)
 
   ## Region 2
   C2 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region2, phi_gamma[2])
-  B2 <- k_gamma[2] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[2])
+  B2 <- k_gamma[2] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[2]) +
+    nugget_gamma[2] * diag(n_timept)
   gamma_sigma2 <- kronecker(C2, B2)
 
   ## Region 3
   C3 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region3, phi_gamma[3])
-  B3 <- k_gamma[3] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[3])
+  B3 <- k_gamma[3] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[3]) +
+    nugget_gamma[3] * diag(n_timept)
   gamma_sigma3 <- kronecker(C3, B3)
 
   eta <- MASS::mvrnorm(
