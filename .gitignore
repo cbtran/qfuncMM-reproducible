@@ -39,3 +39,6 @@ rat-data-coords/
 *.exe
 *.out
 *.app
+
+# R output files
+*.rds
