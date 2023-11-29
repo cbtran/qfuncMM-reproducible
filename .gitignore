@@ -42,3 +42,4 @@ rat-data-coords/
 
 # R output files
 *.rds
+*.log

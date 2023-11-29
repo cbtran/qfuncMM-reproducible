@@ -1,9 +1,9 @@
-here::i_am("R_files/generate.R")
+here::i_am("R_files/generate_ar2.R")
 library(here)
 source(here("R_files/generate_3_region.R"))
 
-nugget_gamma <- 0.1
-nugget_eta <- 0.1
+nugget_gamma <- 0
+nugget_eta <- 0
 k_gamma <- 2
 delta_fn <- function(x) {
   x * (1 + nugget_eta) / (x * (1 + nugget_eta) + k_gamma + nugget_gamma)
@@ -33,7 +33,7 @@ phi_seq <- lapply(sqrd_dist,
 phi_seq <- Reduce(rbind, phi_seq)
 
 delta <- 0.1
-psi <- 0.8
+psi <- 0.2
 
 kEta <- kEta_seq[which(delta_seq == delta)]
 phi <- phi_seq[, which(psi_seq == psi)] # mid
@@ -50,10 +50,10 @@ region_parameters <- data.frame(
 )
 shared_parameters <- c(tau_eta = 0.25, nugget = nugget_eta)
 corr_true <- c(rho12 = 0.1, rho13 = 0.35, rho23 = 0.6)
-n_timept <- 60
+n_timept <- 1070 # yields 60 wavelet coeffs
 n_sim <- 100
 
-three_region <- generate_3_region_new(
+three_region <- generate_ar2_region(
   n_sim, voxel_coords, n_timept, corr_true, region_parameters, shared_parameters, seed = 1234)
 
 out <- list(data = three_region,
@@ -70,6 +70,6 @@ outsetting <- paste0(names(delta_seq)[which(delta_seq == delta)],
                      "M",
                      n_timept,
                      "-",
-                     n_sim, "-rat")
+                     n_sim, "-ar2")
 saveRDS(out, here("full-run", paste0(outsetting, ".rds")))
 cat("Saved to", here("full-run", paste0(outsetting, ".rds")), "\n")

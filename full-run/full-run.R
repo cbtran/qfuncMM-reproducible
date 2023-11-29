@@ -3,8 +3,8 @@ source("full-run/utils.R")
 
 set.seed(100)
 
-setting <- "high-mid-M60-100"
-voxel_coords <- readRDS("full-run/voxel_coords.rds")
+setting <- "high-high-M60-100-rat"
+voxel_coords <- readRDS("full-run/rat_coords.rds")
 allsignals <- readRDS(paste0("full-run/", setting, ".rds"))
 num_timept <- nrow(allsignals$data[[1]][[1]])
 num_voxel <- sapply(voxel_coords, nrow)
@@ -121,11 +121,11 @@ for (i in runids) {
   results_stage1[, , i] <- run_result$stage1
   results[, , i] <- run_result$stage2
   saveRDS(list(stage1 = results_stage1[, , 1:i], stage2 = results[, , 1:i]),
-          paste0("full-run/", setting, "-result-best-clipped.rds"))
+          paste0("full-run/", setting, "-result.rds"))
   cat("Finished sim", i, "\n")
 }
 saveRDS(list(stage1 = results_stage1, stage2 = results),
-        paste0("full-run/", setting, "-result-best-clipped.rds"))
+        paste0("full-run/", setting, "-result.rds"))
 
 sink(type = "message")
 close(warn_log)

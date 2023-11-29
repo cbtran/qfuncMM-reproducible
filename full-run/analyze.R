@@ -3,9 +3,9 @@ library(dplyr)
 library(patchwork)
 
 n_timept <- 60
-setting <- paste0("high-mid-M", n_timept, "-100")
+setting <- paste0("high-high-M", n_timept, "-100")
 
-result <- readRDS(paste0("full-run/", setting, "-result-best-clipped.rds"))
+result <- readRDS(paste0("full-run/", setting, "-rat-result.rds"))
 stage2 <- result$stage2
 stage2rho <- stage2[1, , ]
 nsim <- dim(stage2)[3]
@@ -17,7 +17,7 @@ df_long <- tidyr::gather(df, key = "pair", value = "value")
 df_long$method <- "ReML"
 
 nsim <- dim(result$stage2)[3]
-data <- readRDS(paste0("full-run/", setting, ".rds"))
+data <- readRDS(paste0("full-run/", setting, "-rat.rds"))
 resultCA <- matrix(nrow = nsim, ncol = 3)
 computeCA <- function(r1avg, r2avg) {
   r1avgavg <- r1avg - mean(r1avg)
@@ -75,4 +75,4 @@ p12 + p13 + p23 + plot_annotation(
   title = "Correlation estimates",
   subtitle = subtitle,
   caption = "Full run using plug-in stage 1 noise variance estimate.")
-# ggsave(paste0("full-run/", setting, "-plot.png"))
+ggsave(paste0("full-run/", setting, "-rat-plot.png"))
