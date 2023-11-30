@@ -1,9 +1,20 @@
 here::i_am("R_files/generate.R")
 library(here)
 source(here("R_files/generate_3_region.R"))
+source(here("R_files/spatial-anisotropic.R"))
+
+# Expect argument such as "mid mid std"
+args <- commandArgs(trailingOnly = TRUE)
+covar_setting <- args[3]
+print(args)
+stopifnot(covar_setting %in% c("std", "ar2", "anisotropic"))
 
 nugget_gamma <- 0.1
 nugget_eta <- 0.1
+if (covar_setting == "ar2") {
+  nugget_gamma <- 0
+  nugget_eta <- 0
+}
 k_gamma <- 2
 delta_fn <- function(x) {
   x * (1 + nugget_eta) / (x * (1 + nugget_eta) + k_gamma + nugget_gamma)
@@ -24,16 +35,20 @@ psi_fn <- function(phi, dist_sqrd) {
 
 psi_seq <- c(0.2, 0.5, 0.8)
 names(psi_seq) <- c("low", "mid", "high")
-phi_seq <- lapply(sqrd_dist,
-                  \(dist)
-                    sapply(c(0.2, 0.5, 0.8), function(y) {
-                      uniroot(\(x) psi_fn(x, dist) - y, interval = c(0, 20))$root
-                    })
-                  )
+phi_seq <- lapply(
+  sqrd_dist,
+  \(dist) {
+    sapply(c(0.2, 0.5, 0.8), function(y) {
+      uniroot(\(x) psi_fn(x, dist) - y, interval = c(0, 20))$root
+    })
+  }
+)
 phi_seq <- Reduce(rbind, phi_seq)
 
-delta <- 0.1
-psi <- 0.8
+# Set delta and psi based on the input
+delta <- delta_seq[args[1]]
+psi <- psi_seq[args[2]]
+print(paste0("delta = ", delta, ", psi = ", psi))
 
 kEta <- kEta_seq[which(delta_seq == delta)]
 phi <- phi_seq[, which(psi_seq == psi)] # mid
@@ -50,11 +65,43 @@ region_parameters <- data.frame(
 )
 shared_parameters <- c(tau_eta = 0.25, nugget = nugget_eta)
 corr_true <- c(rho12 = 0.1, rho13 = 0.35, rho23 = 0.6)
+
 n_timept <- 60
+if (covar_setting == "ar2") {
+  n_timept <- 1070
+}
 n_sim <- 100
 
-three_region <- generate_3_region_new(
-  n_sim, voxel_coords, n_timept, corr_true, region_parameters, shared_parameters, seed = 1234)
+three_region <- switch(covar_setting,
+  "std" = {
+    spatial <- function(coords, phi_gamma) {
+      dist_sqrd_mat <- as.matrix(dist(coords))^2
+      get_cor_mat("matern_5_2", dist_sqrd_mat, phi_gamma)
+    }
+    generate_3_region_new(
+      n_sim, voxel_coords, n_timept, corr_true,
+      region_parameters, shared_parameters, spatial,
+      seed = 1234
+    )
+  },
+  "ar2" = {
+    generate_ar2_region(
+      n_sim, voxel_coords, n_timept, corr_true,
+      region_parameters, shared_parameters,
+      seed = 1234
+    )
+  },
+  "anisotropic" = {
+    spatial <- function(coords, phi_gamma) {
+      anisotropic(coords, phi_gamma, c(1, 1.2, 1.5), c(1, 1.2, 1.5))
+    }
+    generate_3_region_new(
+      n_sim, voxel_coords, n_timept, corr_true,
+      region_parameters, shared_parameters, spatial,
+      seed = 1234
+    )
+  }
+)
 
 out <- list(data = three_region,
             setting = list(region_parameters = region_parameters,
@@ -67,9 +114,12 @@ outsetting <- paste0(names(delta_seq)[which(delta_seq == delta)],
                      "-",
                      names(psi_seq)[which(psi_seq == psi)],
                      "-",
-                     "M",
-                     n_timept,
+                     "M60",
                      "-",
                      n_sim, "-rat")
-saveRDS(out, here("full-run", paste0(outsetting, ".rds")))
-cat("Saved to", here("full-run", paste0(outsetting, ".rds")), "\n")
+if (covar_setting != "std") {
+  outsetting <- paste0(outsetting, "-", covar_setting)
+}
+outpath <- here("full-run", paste0(outsetting, ".rds"))
+saveRDS(out, outpath)
+cat("Saved to", outpath, "\n")

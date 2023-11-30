@@ -3,7 +3,9 @@ source("full-run/utils.R")
 
 set.seed(100)
 
-setting <- "high-high-M60-100-rat"
+args <- commandArgs(trailingOnly = TRUE)
+setting <- paste0(args[1], "-", args[2], "-M60-100-", args[3])
+
 voxel_coords <- readRDS("full-run/rat_coords.rds")
 allsignals <- readRDS(paste0("full-run/", setting, ".rds"))
 num_timept <- nrow(allsignals$data[[1]][[1]])

@@ -20,6 +20,6 @@ RUN pip install radian && \
     installGithub.r ManuelHentschel/vscDebugger cbtran/qfuncMM@dev
 
 
-RUN install2.r ggpubr corrplot latex2exp Matrix xtable ggridges kableExtra tictoc here patchwork
+RUN install2.r ggpubr corrplot latex2exp Matrix xtable ggridges kableExtra tictoc here patchwork waveslim nleqslv
 
 USER root
