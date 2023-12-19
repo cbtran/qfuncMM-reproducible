@@ -1,6 +1,11 @@
 # Simulation files
 simulation-output/
 rat-data-coords/
+full-run/logs/
+full-run/out/
+full-run/plots/
+full-run/clipping/
+full-run/data/
 .vscode/
 .lintr
 
