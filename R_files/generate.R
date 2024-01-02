@@ -1,3 +1,11 @@
+# Generate data for three-region regions using real voxel coordinates.
+# Run this script in the terminal as
+# >Rscript R_files/generate.R <delta> <psi> <spec> <nsim>
+# where <delta> and <psi> is one of "high", "mid", "low",
+# <spec> is one of "std", "fgn", "ar2", "anisotropic".
+# <nsim> is the number of simulations to generate.
+
+
 here::i_am("R_files/generate.R")
 library(here)
 source(here("R_files/generate_3_region.R"))
@@ -8,6 +16,7 @@ args <- commandArgs(trailingOnly = TRUE)
 covar_setting <- args[3]
 print(args)
 stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic"))
+n_sim <- as.numeric(args[4])
 
 nugget_gamma <- 0.1
 nugget_eta <- 0.1
@@ -70,7 +79,6 @@ n_timept <- 60
 if (covar_setting %in% c("fgn", "ar2")) {
   n_timept <- 1070
 }
-n_sim <- 100
 
 three_region <- switch(covar_setting,
   "std" = {
@@ -133,20 +141,6 @@ outsetting <- paste0(names(delta_seq)[which(delta_seq == delta)],
 if (covar_setting != "std") {
   outsetting <- paste0(outsetting, "-", covar_setting)
 }
-outpath <- here("full-run", paste0(outsetting, ".rds"))
+outpath <- here("full-run/data", paste0(outsetting, ".rds"))
 saveRDS(out, outpath)
 cat("Saved to", outpath, "\n")
-
-# ## fgn temporal covariance
-# library(multiwave)
-# ?multiwave::fivarma()
-# # d = h - 1/2, where h is the Hurst index, 0 <= h <= 1
-# nsim <- 1000
-# n <- 100
-# h <- 0.7
-# results <- matrix(0, nrow = nsim, ncol = n)
-# for (i in 1:nsim) {
-#   results[i, ] <- multiwave::fivarma(n, h - 0.5)$x
-#   # multiply this by sqrt(k_gamma)
-# }
-# apply(results, 2, var)

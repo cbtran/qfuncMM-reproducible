@@ -5,7 +5,7 @@ full-run/logs/
 full-run/out/
 full-run/plots/
 full-run/clipping/
-full-run/data/
+full-run/data/*
 .vscode/
 .lintr
 
