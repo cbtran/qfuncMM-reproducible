@@ -40,7 +40,7 @@ computeCA <- function(signal) {
   mean_signal <- lapply(signal, \(regmat) apply(regmat, 1, mean))
   result <- c(pairCA(mean_signal$region1, mean_signal$region2),
     pairCA(mean_signal$region1, mean_signal$region3),
-    pairCA(mean_signal$region2, mean_signal$region3)) |> sigmoid()
+    pairCA(mean_signal$region2, mean_signal$region3))
   names(result) <- c("r12", "r13", "r23")
   result
 }

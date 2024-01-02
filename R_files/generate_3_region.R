@@ -173,8 +173,31 @@ generate_ar2 <- function(n_sim, t, p, cor1, cor2, k_gamma, spatial_lower) {
   result
 }
 
+
+# Generate p independent fgn processes of length t with Hurst index h
+generate_fgn <- function(n_sim, t, p, h, k_gamma, spatial_lower) {
+  # opt <- function(xi, cor1, cor2) {
+  #   c(autocor_unit(1, xi) - cor1, autocor_unit(2, xi) - cor2)
+  # }
+
+  result <- matrix(nrow = n_sim, ncol = t * p)
+  # Length of time series is t and single is a single obs. as a p x t matrix.
+  for (j in 1:n_sim) {
+    single <- matrix(nrow = p, ncol = t)
+    for (i in 1:p) {
+      single[i, ] <- multiwave::fivarma(t, h - 0.5)$x * sqrt(k_gamma)
+    }
+    # Vectorize the matrix for a single observation.
+    # Need to transpose here since time comes first.
+    result[j, ] <- as.numeric(t(spatial_lower %*% single))
+  }
+  result
+}
+
+
 generate_ar2_region <- function(num_sim, voxel_coords, n_timept,
                                 true_corr, region_params, shared_params,
+                                temporal_covar_fn,
                                 seed = 1, c_kernel_type = "matern_5_2") {
   set.seed(seed + 1000)
 
@@ -202,22 +225,22 @@ generate_ar2_region <- function(num_sim, voxel_coords, n_timept,
   var_epsilon_sqrt <- diag(sqrt(region_params$sigma2))
   eta_spatial <- var_epsilon_sqrt %*% k_eta_diag %*% corr_mat %*% k_eta_diag %*% var_epsilon_sqrt
   eta_lower <- t(chol(eta_spatial))
-  eta <- generate_ar2(num_sim, n_timept, 3, 0.4, 0.3, 1, eta_lower)
+  eta <- temporal(num_sim, n_timept, 3, 1, eta_lower)
 
   phi_gamma <- region_params$phi_gamma
   k_gamma <- region_params$k_gamma
 
   ## Region 1
   C1 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region1, phi_gamma[1])
-  gamma_r1 <- generate_ar2(num_sim, n_timept, n_voxel1, 0.4, 0.3, k_gamma[1], t(chol(C1)))
+  gamma_r1 <- temporal_covar_fn(num_sim, n_timept, n_voxel1, k_gamma[1], t(chol(C1)))
 
   ## Region 2
   C2 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region2, phi_gamma[2])
-  gamma_r2 <- generate_ar2(num_sim, n_timept, n_voxel2, 0.4, 0.3, k_gamma[2], t(chol(C2)))
+  gamma_r2 <- temporal_covar_fn(num_sim, n_timept, n_voxel2, k_gamma[2], t(chol(C2)))
 
   ## Region 3
   C3 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region3, phi_gamma[3])
-  gamma_r3 <- generate_ar2(num_sim, n_timept, n_voxel3, 0.4, 0.3, k_gamma[3], t(chol(C3)))
+  gamma_r3 <- temporal_covar_fn(num_sim, n_timept, n_voxel3, k_gamma[3], t(chol(C3)))
 
   mu_1 <- region_params$mean[1]
   mu_2 <- region_params$mean[2]

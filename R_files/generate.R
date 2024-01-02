@@ -7,7 +7,7 @@ source(here("R_files/spatial-anisotropic.R"))
 args <- commandArgs(trailingOnly = TRUE)
 covar_setting <- args[3]
 print(args)
-stopifnot(covar_setting %in% c("std", "ar2", "anisotropic"))
+stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic"))
 
 nugget_gamma <- 0.1
 nugget_eta <- 0.1
@@ -67,7 +67,7 @@ shared_parameters <- c(tau_eta = 0.25, nugget = nugget_eta)
 corr_true <- c(rho12 = 0.1, rho13 = 0.35, rho23 = 0.6)
 
 n_timept <- 60
-if (covar_setting == "ar2") {
+if (covar_setting %in% c("fgn", "ar2")) {
   n_timept <- 1070
 }
 n_sim <- 100
@@ -85,9 +85,22 @@ three_region <- switch(covar_setting,
     )
   },
   "ar2" = {
+    temporal <- function(n, t, p, k, spatial_lower) {
+      generate_ar2(n, t, p, 0.4, 0.3, k, spatial_lower)
+    }
     generate_ar2_region(
       n_sim, voxel_coords, n_timept, corr_true,
-      region_parameters, shared_parameters,
+      region_parameters, shared_parameters, temporal,
+      seed = 1234
+    )
+  },
+  "fgn" = {
+    temporal <- function(n, t, p, k, spatial_lower) {
+      generate_fgn(n, t, p, 0.7, k, spatial_lower)
+    }
+    generate_ar2_region(
+      n_sim, voxel_coords, n_timept, corr_true,
+      region_parameters, shared_parameters, temporal,
       seed = 1234
     )
   },
@@ -123,3 +136,17 @@ if (covar_setting != "std") {
 outpath <- here("full-run", paste0(outsetting, ".rds"))
 saveRDS(out, outpath)
 cat("Saved to", outpath, "\n")
+
+# ## fgn temporal covariance
+# library(multiwave)
+# ?multiwave::fivarma()
+# # d = h - 1/2, where h is the Hurst index, 0 <= h <= 1
+# nsim <- 1000
+# n <- 100
+# h <- 0.7
+# results <- matrix(0, nrow = nsim, ncol = n)
+# for (i in 1:nsim) {
+#   results[i, ] <- multiwave::fivarma(n, h - 0.5)$x
+#   # multiply this by sqrt(k_gamma)
+# }
+# apply(results, 2, var)

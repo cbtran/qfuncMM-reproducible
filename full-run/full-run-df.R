@@ -1,9 +1,7 @@
-library(ggplot2)
-library(dplyr)
-library(patchwork)
+library(tibble)
 
 fullrun_df <- function(covar_setting) {
-  stopifnot(covar_setting %in% c("std", "ar2", "anisotropic"))
+  stopifnot(covar_setting %in% c("std", "ar2", "anisotropic", "fgn"))
   n_timept <- 60
   covar_prefix <- ""
   if (covar_setting != "std")
@@ -15,11 +13,11 @@ fullrun_df <- function(covar_setting) {
     for (psi in c("low", "mid", "high")) {
       setting <- paste0(delta, "-", psi, "-M", n_timept, "-100-rat", covar_prefix)
 
-      resultpath <- paste0("full-run/", setting, "-result.rds")
+      resultpath <- paste0("full-run/out/", setting, "-result.rds")
+      cat(resultpath, '\n')
       if (!file.exists(resultpath)) {
-        cat("Setting", paste0(delta, "-", psi), "does not exist yet. Skipping.")
-        empty_plot <- ggplot() + theme_minimal()
-        return(empty_plot)
+        cat("Setting", paste0(delta, "-", psi), "does not exist yet. Skipping.\n")
+        next
       }
       result <- readRDS(resultpath)
       stage2 <- result$stage2
@@ -33,7 +31,7 @@ fullrun_df <- function(covar_setting) {
       df_long$method <- factor("ReML", levels = c("CA", "ReML"))
 
       nsim <- dim(result$stage2)[3]
-      data <- readRDS(paste0("full-run/", setting, ".rds"))
+      data <- readRDS(paste0("full-run/data/", setting, ".rds"))
       resultCA <- matrix(nrow = nsim, ncol = 3)
       computeCA <- function(r1avg, r2avg) {
         r1avgavg <- r1avg - mean(r1avg)

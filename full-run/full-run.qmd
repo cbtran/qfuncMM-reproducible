@@ -1,0 +1,199 @@
+---
+title: "QFunC Mixed Model"
+subtitle: "Simulation results"
+format: revealjs
+self-contained: true
+---
+
+
+## Model
+$J$ regions, $L_j$ voxels in region $j$, $M$ time points.
+
+$$
+X_{jlm} = \mu_j + \eta_{jm} + \gamma_{j\ell m} + \epsilon_{j\ell m}
+$$
+
+For a region $j$,
+
+* $\mu_j$ is the overall mean
+* $\eta_{jm}$ is the common mean-zero signal shared by all voxels
+* $\gamma_{j\ell m}$ is the spatiotemporal signal across voxels
+* $\epsilon_{j\ell m}$ is i.i.d. noise
+
+##
+<div style="font-size: 24px;">
+$$
+X_{j\ell m} = \mu_j + \eta_{jm} + \gamma_{j\ell m} + \epsilon_{j\ell m}
+$$
+
+\begin{align}
+   \label{eq:SpaTempKern}
+   (C_j)_{ll'} &= K(\big\lVert{v_{j\ell} - v_{j\ell'}}\big\rVert; \nu_j, \phi_j) \nonumber \\
+   (B_j)_{mm'} &= k_{\gamma_j}H(|m - m'|; \tau_{\gamma_j}) +  \sigma^2_{\gamma_j}\delta_{mm'} \nonumber \\
+   (A)_{mm'} &= H(|m - m'|; \tau_\eta) + \sigma^2_\eta \delta_{mm'} \\
+\end{align}
+</div>
+
+. . .
+
+<div style="font-size: 24px;">
+
+\begin{align}
+   \quad R &= \begin{pmatrix}
+      1 & \rho_{12} & \cdots & \rho_{1J} \\
+      \rho_{12} & 1 & \ddots & \cdots \\
+      \vdots & \ddots & \ddots & \ddots \\
+      \rho_{J1} & \vdots & \ddots & 1
+   \end{pmatrix},
+   \Omega = SRS, \quad S = \operatorname{diag}(k_{\eta_1}^{1/2}, \dotsc, k_{\eta_J}^{1/2}) \\
+\label{eq:varMats}
+    \operatorname{Var}(\epsilon) &= \Sigma_\epsilon :=
+      \operatorname{diag}(\sigma^2_{\epsilon_1} I_{ML_1},\dotsc , \sigma^2_{\epsilon_J} I_{ML_J}) \\
+    \operatorname{Var}(\gamma) &= \Sigma_\epsilon^{1/2}\Lambda \Sigma_\epsilon^{1/2},
+    \quad \Lambda = \operatorname{diag}(C_1 \otimes B_1,\dotsc, C_J \otimes B_J) \\
+    \operatorname{Var}(\eta) &= (\tilde{\Sigma}_\epsilon^{1/2}\Omega \tilde{\Sigma}_\epsilon^{1/2})\otimes A
+\end{align}
+</div>
+
+. . .
+
+<div style="font-size: 24px;">
+Stage 1 parameters:
+$(k_{\gamma_j}, \sigma^2_{\gamma_j}, \tau_{\gamma_j}, \phi_j, \sigma^2_{\epsilon_j})$
+
+Stage 2 parameters:
+$(\rho_{jj'}, k_{\eta_j}, k_{\eta_{j'}}, \tau_\eta, \sigma^2_{\eta})$
+
+Need to choose suitable parameters for our simulations.
+</div>
+
+## Simulation setting
+
+We consider various simulation settings to evaluate the performance of our method.
+
+* Correct specification
+* Spatial and temporal misspecification
+
+For each simulation setting, we generate data from three regions using real
+voxel coordinates and $60$ time points.
+
+The three regions contain $41$, $25$, and $77$ voxels.
+
+##
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
+#| fig.cap="Correct specification"
+library(ggplot2)
+library(stringr)
+create_boxplot <- function(ggdf, title, n = 100) {
+   p <- ggplot(ggdf) +
+   geom_boxplot(mapping = aes(x =  pair, y = value, fill = method)) +
+   geom_segment(aes(x = as.numeric(pair)-0.5,
+                     xend = as.numeric(pair)+0.5,
+                     y = yintercept,
+                     yend = yintercept),
+                  lty = 2) +
+   ylim(-1, 1) +
+   facet_grid(delta ~ psi,
+               labeller = label_bquote(rows = delta == .(delta),
+                                       cols = psi == .(psi))) +
+   theme_bw() +
+   theme(strip.text.y = element_text(angle = 0)) +
+   labs(x = "Region pair", y = "\u03C1") +
+   ggtitle(title, subtitle = str_glue("n = {n}"))
+   p
+}
+ggdf <- readRDS("full-std-df.rds")
+p <- create_boxplot(ggdf, "Simulation results - correctly specified covariance structure")
+print(p)
+```
+
+##
+
+<div style="font-size: 24px;">
+The average of intra-regional correlations is given by
+$$
+\alpha_j = \frac{1}{L_j^2} \sum_{\ell, \ell'} \operatorname{Cor}(Y_j(v_{j\ell, t_m}), Y_j(v_{j\ell'}, t_m))
+$$
+We can write
+$$
+\alpha_j = \delta_j + (1-\delta_j)\psi_j
+$$
+where
+
+* $\delta_j = \frac{k_{\eta_j}(1+\sigma^2_\eta)}{k_{\eta_j}(1+\sigma^2_\eta) + (k_{\gamma_j} + \sigma^2_{\gamma_j})}$ is the variance of $\eta_j$ relative to $Y_j(v, t)$
+* $\psi_j = \frac{1}{L_j^2} \sum_{\ell, \ell'} K(\big\lVert{v_{j\ell} - v_{j\ell'}}\big\rVert; \nu_j, \phi_j)$ is the average intra-regional spatial covariance
+</div>
+
+. . .
+
+<div style="font-size: 24px;">
+
+* Large $\delta_j$ means strong common signal relative to voxel-level signal. Easier to estimate $\rho$.
+* For fixed $\delta_j$, larger $\psi_j$ means stronger spatial signal.
+
+In simulated data, we choose parameters such that $\delta_j = 0.1, 0.5, 0.7$ and $\psi_j = 0.2, 0.5, 0.8$.
+</div>
+
+
+
+
+## Misspecification
+We consider both temporal and spatial misspecification.
+
+<div style="font-size: 24px;">
+
+* Temporal misspecification: $A$ and $B_j$
+   - $AR(2)$ with $\phi_1 = 0.4$ and $\phi_2 = 0.3$
+   - Fractional Gaussian noise with $H = 0.7$
+   - Pass raw signal through wavelet transformation to get 60 coefficients
+
+</div>
+
+. . .
+
+<div style="font-size: 24px;">
+
+* Spatial misspecification: $C_j$ [Castruccio et al. (2018)]
+   - Anisotropic Matérn
+   - Partition region $j$ into two subregions with centroids $v_{j1}^*, v_{j2}^*$.
+   - Consider $R = \operatorname{diag}(1, 1.2, 1.5)$.
+   - $[C_j]_{\ell\ell'} = \sum_{s=1}^2 w_{s\ell} w_{s\ell'} K(\big\lVert{R(v_{j\ell} - v_{j\ell'})}\big\rVert; \nu_j, \phi_j)$
+   - $w_{sl} = (\big\lVert{v_{j\ell} - v_{js^*}}\big\rVert)^{-1}$ is the inverse distance to the centroid.
+
+</div>
+
+##
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
+#| fig.cap="Temporal misspecification"
+
+ggdf <- readRDS("full-ar2-df.rds")
+p <- create_boxplot(ggdf, "Simulation results - AR(2) temporal covariance")
+print(p)
+```
+
+##
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
+#| fig.cap="Temporal misspecification"
+
+ggdf <- readRDS("full-fgn-df.rds")
+p <- create_boxplot(ggdf, "Simulation results - fGn temporal covariance", 100)
+print(p)
+```
+
+
+##
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
+#| fig.cap="Spatial misspecification"
+
+ggdf <- readRDS("full-anisotropic-df.rds")
+p <- create_boxplot(ggdf, "Simulation results - Anisotropic spatial covariance")
+print(p)
+```
