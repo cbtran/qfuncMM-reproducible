@@ -3,6 +3,7 @@ simulation-output/
 rat-data-coords/
 full-run/logs/
 full-run/out/
+full-run/out-stage2-only/
 full-run/plots/
 full-run/clipping/
 full-run/data/*
