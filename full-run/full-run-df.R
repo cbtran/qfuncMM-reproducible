@@ -33,18 +33,13 @@ fullrun_df <- function(covar_setting) {
       nsim <- dim(result$stage2)[3]
       data <- readRDS(paste0("full-run/data/", setting, ".rds"))
       resultCA <- matrix(nrow = nsim, ncol = 3)
-      computeCA <- function(r1avg, r2avg) {
-        r1avgavg <- r1avg - mean(r1avg)
-        r2avgavg <- r2avg - mean(r2avg)
-        sum(r1avgavg * r2avgavg) / (sd(r1avg) * sd(r2avg) * length(r1avg))
-      }
 
       for (i in seq_len(nsim)) {
         signal <- data$data[[i]]
         ca <- lapply(signal, \(regmat) apply(regmat, 1, mean))
-        resultCA[i, 1] <- computeCA(ca$region1, ca$region2)
-        resultCA[i, 2] <- computeCA(ca$region1, ca$region3)
-        resultCA[i, 3] <- computeCA(ca$region2, ca$region3)
+        resultCA[i, 1] <- cor(ca$region1, ca$region2)
+        resultCA[i, 2] <- cor(ca$region1, ca$region3)
+        resultCA[i, 3] <- cor(ca$region2, ca$region3)
       }
       dfca <- data.frame(
         value = as.numeric(resultCA),

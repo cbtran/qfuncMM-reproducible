@@ -5,6 +5,16 @@ format: revealjs
 self-contained: true
 ---
 
+```{r}
+#| include=FALSE, echo=FALSE, message=FALSE, warning=FALSE
+library(tidyverse)
+library(reshape2)
+library(stringr)
+library(kableExtra)
+here::i_am("full-run/full-run.qmd")
+library(here)
+```
+
 
 ## Model
 $J$ regions, $L_j$ voxels in region $j$, $M$ time points.
@@ -84,8 +94,6 @@ The three regions contain $41$, $25$, and $77$ voxels.
 ```{r}
 #| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
 #| fig.cap="Correct specification"
-library(ggplot2)
-library(stringr)
 create_boxplot <- function(ggdf, title, n = 100) {
    p <- ggplot(ggdf) +
    geom_boxplot(mapping = aes(x =  pair, y = value, fill = method)) +
@@ -104,10 +112,58 @@ create_boxplot <- function(ggdf, title, n = 100) {
    ggtitle(title, subtitle = str_glue("n = {n}"))
    p
 }
-ggdf <- readRDS("full-std-df.rds")
+ggdf <- readRDS(here("full-run", "full-std-df.rds"))
 p <- create_boxplot(ggdf, "Simulation results - correctly specified covariance structure")
 print(p)
 ```
+
+##
+```{r}
+library(dplyr)
+library(kableExtra)
+tabs1 <- filter(ggdf, method == "ReML") |>
+         group_by(delta, psi, pair) |>
+         summarize(mean = mean(value),
+                   median = median(value),
+                   mad = mean(abs(value - yintercept)),
+                   rmse = sqrt(mean((value - yintercept)^2)),
+                   sd = sd(value),
+                   .groups = 'drop')
+
+# Split the data into smaller parts
+tabs1_r12 <- filter(tabs1, pair == "r12") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+tabs1_r13 <- filter(tabs1, pair == "r13") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+tabs1_r23 <- filter(tabs1, pair == "r23") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+```
+
+::: {.panel-tabset}
+
+### Region 1 and 2
+
+```{r}
+kable(tabs1_r12, "html") |>
+   kable_styling(font_size = 30)
+```
+
+### Region 1 and 3
+
+```{r}
+kable(tabs1_r13, "html") |> kable_styling(font_size = 30)
+```
+
+### Region 2 and 3
+
+```{r}
+kable(tabs1_r23, "html") |> kable_styling(font_size = 30)
+```
+
+:::
 
 ##
 
@@ -137,6 +193,19 @@ In simulated data, we choose parameters such that $\delta_j = 0.1, 0.5, 0.7$ and
 </div>
 
 
+##
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=10, fig.align='center',
+ebluedf <- readRDS(here("full-run", "out-eblue", "eblue-df.rds"))
+oracledf <- readRDS(here("full-run", "out-oracle", "oracle-df.rds")) |>
+              filter(method != "CA") |>
+              mutate(method = as.factor("oracle"))
+correct_specdf <- bind_rows(oracledf, ebluedf, ggdf) |>
+          mutate(method = factor(method, levels = c("CA", "eblue", "oracle", "ReML")))
+p <- create_boxplot(correct_specdf, "Comparing CA, ReML, EBLUE, and Oracle estimates")
+print(p)
+```
 
 
 ## Misspecification
@@ -170,7 +239,7 @@ We consider both temporal and spatial misspecification.
 #| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
 #| fig.cap="Temporal misspecification"
 
-ggdf <- readRDS("full-ar2-df.rds")
+ggdf <- readRDS(here("full-run", "full-ar2-df.rds"))
 p <- create_boxplot(ggdf, "Simulation results - AR(2) temporal covariance")
 print(p)
 ```
@@ -178,14 +247,107 @@ print(p)
 ##
 
 ```{r}
+tabs1 <- filter(ggdf, method == "ReML") |>
+         group_by(delta, psi, pair) |>
+         summarize(mean = mean(value),
+                   median = median(value),
+                   mad = mean(abs(value - yintercept)),
+                   rmse = sqrt(mean((value - yintercept)^2)),
+                   sd = sd(value),
+                   .groups = 'drop')
+
+# Split the data into smaller parts
+tabs1_r12 <- filter(tabs1, pair == "r12") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+tabs1_r13 <- filter(tabs1, pair == "r13") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+tabs1_r23 <- filter(tabs1, pair == "r23") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+```
+
+::: {.panel-tabset}
+
+### Region 1 and 2
+
+```{r}
+kable(tabs1_r12, "html") |>
+   kable_styling(font_size = 30)
+```
+
+### Region 1 and 3
+
+```{r}
+kable(tabs1_r13, "html") |> kable_styling(font_size = 30)
+```
+
+### Region 2 and 3
+
+```{r}
+kable(tabs1_r23, "html") |> kable_styling(font_size = 30)
+```
+
+:::
+
+##
+
+```{r}
 #| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
 #| fig.cap="Temporal misspecification"
 
-ggdf <- readRDS("full-fgn-df.rds")
+ggdf <- readRDS(here("full-run", "full-fgn-df.rds"))
 p <- create_boxplot(ggdf, "Simulation results - fGn temporal covariance", 100)
 print(p)
 ```
 
+##
+
+```{r}
+tabs1 <- filter(ggdf, method == 'ReML') |>
+         group_by(delta, psi, pair) |>
+         summarize(mean = mean(value),
+                   median = median(value),
+                   mad = mean(abs(value - yintercept)),
+                   rmse = sqrt(mean((value - yintercept)^2)),
+                   sd = sd(value),
+                   .groups = 'drop')
+
+# Split the data into smaller parts
+tabs1_r12 <- filter(tabs1, pair == "r12") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+tabs1_r13 <- filter(tabs1, pair == "r13") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+tabs1_r23 <- filter(tabs1, pair == "r23") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+```
+
+::: {.panel-tabset}
+
+### Region 1 and 2
+
+```{r}
+kable(tabs1_r12, "html") |>
+   kable_styling(font_size = 30)
+```
+
+### Region 1 and 3
+
+```{r}
+kable(tabs1_r13, "html") |> kable_styling(font_size = 30)
+```
+
+### Region 2 and 3
+
+```{r}
+kable(tabs1_r23, "html") |> kable_styling(font_size = 30)
+```
+
+:::
 
 ##
 
@@ -193,7 +355,54 @@ print(p)
 #| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
 #| fig.cap="Spatial misspecification"
 
-ggdf <- readRDS("full-anisotropic-df.rds")
+ggdf <- readRDS(here("full-run", "full-anisotropic-df.rds"))
 p <- create_boxplot(ggdf, "Simulation results - Anisotropic spatial covariance")
 print(p)
 ```
+
+##
+
+```{r}
+tabs1 <- filter(ggdf, method == 'ReML') |>
+         group_by(delta, psi, pair) |>
+         summarize(mean = mean(value),
+                   median = median(value),
+                   mad = mean(abs(value - yintercept)),
+                   rmse = sqrt(mean((value - yintercept)^2)),
+                   sd = sd(value),
+                   .groups = 'drop')
+
+# Split the data into smaller parts
+tabs1_r12 <- filter(tabs1, pair == "r12") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+tabs1_r13 <- filter(tabs1, pair == "r13") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+tabs1_r23 <- filter(tabs1, pair == "r23") |>
+   select(-pair) |>
+   mutate(across(-c(delta, psi), round, 3))
+```
+
+::: {.panel-tabset}
+
+### Region 1 and 2
+
+```{r}
+kable(tabs1_r12, "html") |>
+   kable_styling(font_size = 30)
+```
+
+### Region 1 and 3
+
+```{r}
+kable(tabs1_r13, "html") |> kable_styling(font_size = 30)
+```
+
+### Region 2 and 3
+
+```{r}
+kable(tabs1_r23, "html") |> kable_styling(font_size = 30)
+```
+
+:::
