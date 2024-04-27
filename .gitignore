@@ -1,6 +1,4 @@
 # Simulation files
-simulation-output/
-rat-data-coords/
 full-run/logs/
 full-run/out/
 full-run/out-oracle/
@@ -13,6 +11,8 @@ hcp/
 .lintr
 hcp/*.txt
 hcp/*.zip
+!full-run/rat_coords.rds
+*.rds
 
 # Prerequisites
 *.d
