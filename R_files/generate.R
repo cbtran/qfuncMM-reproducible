@@ -15,8 +15,10 @@ source(here("R_files/spatial-anisotropic.R"))
 args <- commandArgs(trailingOnly = TRUE)
 covar_setting <- args[3]
 print(args)
+cat(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
 stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic"))
 n_sim <- as.numeric(args[4])
+seed <- as.numeric(args[5])
 
 nugget_gamma <- 0.1
 nugget_eta <- 0.1
@@ -89,7 +91,7 @@ three_region <- switch(covar_setting,
     generate_3_region_new(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, spatial,
-      seed = 1234
+      seed = seed
     )
   },
   "ar2" = {
@@ -99,7 +101,7 @@ three_region <- switch(covar_setting,
     generate_ar2_region(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, temporal,
-      seed = 1234
+      seed = seed
     )
   },
   "fgn" = {
@@ -109,7 +111,7 @@ three_region <- switch(covar_setting,
     generate_ar2_region(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, temporal,
-      seed = 1234
+      seed = seed
     )
   },
   "anisotropic" = {
@@ -119,7 +121,7 @@ three_region <- switch(covar_setting,
     generate_3_region_new(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, spatial,
-      seed = 1234
+      seed = seed
     )
   }
 )
@@ -129,7 +131,8 @@ out <- list(data = three_region,
                            shared_parameters = shared_parameters,
                            corr_true = corr_true,
                            delta = delta,
-                           psi = psi))
+                           psi = psi),
+            seed = seed)
 
 outsetting <- paste0(names(delta_seq)[which(delta_seq == delta)],
                      "-",

@@ -24,11 +24,13 @@ time_sqrd_mat <- outer(seq_len(num_timept), seq_len(num_timept), `-`)^2
 
 error_na <- list(theta = rep(NA, 5), var_noise = rep(NA, 2))
 
+outpath <- paste0("full-run/out/", setting, sprintf("-result-%d-%d.rds", startid, endid))
+
 run <- function(signal, runid) {
   # Stage 1 param list: phi_gamma, tau_gamma, k_gamma, nugget_gamma, var_noise
-  tictoc::tic(paste("Finished run", runid))
+  # tictoc::tic(paste("Finished run", runid))
   result <- qfuncMM(signal, voxel_coords, verbose = TRUE)
-  tictoc::toc()
+  # tictoc::toc()
   stage2 <- abind::abind(result$rho, result$stage2) |>
     apply(3, function(x) c(x[2, 1], x[3, 1], x[3, 2])) |>
     t()
@@ -52,21 +54,15 @@ dimnames(results_stage1) <- list(
   c("phi_gamma", "tau_gamma", "k_gamma", "nugget_gamma", "var_noise"),
   c("r1", "r2", "r3"), NULL)
 
-warn_log <- file("full-run/warnings.log", open = "wt")
-sink(warn_log, append = TRUE, type = "message")
-
 for (i in dataids) {
   signal <- allsignals$data[[i]]
   run_result <- run(signal, i)
   runid <- i - dataids[1] + 1
   results_stage1[, , runid] <- run_result$stage1
   results[, , runid] <- run_result$stage2
-  saveRDS(list(stage1 = results_stage1[, , 1:runid], stage2 = results[, , 1:runid]),
-          paste0("full-run/out/", setting, glue("-result-{startid}-{endid}.rds")))
+  saveRDS(list(stage1 = results_stage1[, , 1:runid],
+               stage2 = results[, , 1:runid]),
+          outpath)
   cat("Finished sim", i, "\n")
 }
-saveRDS(list(stage1 = results_stage1, stage2 = results),
-        paste0("full-run/out/", setting, glue("-result-{startid}-{endid}.rds")))
-
-sink(type = "message")
-close(warn_log)
+saveRDS(list(stage1 = results_stage1, stage2 = results), outpath)
