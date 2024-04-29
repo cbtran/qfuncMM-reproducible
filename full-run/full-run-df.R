@@ -1,7 +1,8 @@
-library(tibble)
+here::i_am("full-run/full-run-df.R")
+library(here)
 
 fullrun_df <- function(covar_setting) {
-  stopifnot(covar_setting %in% c("std", "ar2", "anisotropic", "fgn"))
+  stopifnot(covar_setting %in% c("std", "ar2", "anisotropic", "fgn", "eblue"))
   n_timept <- 60
   covar_prefix <- ""
   if (covar_setting != "std")
@@ -12,9 +13,7 @@ fullrun_df <- function(covar_setting) {
   for (delta in c("high", "mid", "low")) {
     for (psi in c("low", "mid", "high")) {
       setting <- paste0(delta, "-", psi, "-M", n_timept, "-100-rat", covar_prefix)
-
-      resultpath <- paste0("full-run/out/", setting, "-result.rds")
-      cat(resultpath, '\n')
+      resultpath <- here("full-run", "out", paste0(setting, "-result.rds"))
       if (!file.exists(resultpath)) {
         cat("Setting", paste0(delta, "-", psi), "does not exist yet. Skipping.\n")
         next
@@ -31,7 +30,7 @@ fullrun_df <- function(covar_setting) {
       df_long$method <- factor("ReML", levels = c("CA", "ReML"))
 
       nsim <- dim(result$stage2)[3]
-      data <- readRDS(paste0("full-run/data/", setting, ".rds"))
+      data <- readRDS(here("full-run", "data", paste0(setting, ".rds")))
       resultCA <- matrix(nrow = nsim, ncol = 3)
 
       for (i in seq_len(nsim)) {
@@ -57,5 +56,57 @@ fullrun_df <- function(covar_setting) {
     }
   }
 
-  as_tibble(Reduce(rbind, df_list))
+  return(Reduce(rbind, df_list))
+}
+
+outpath <- here("full-run", "out", "results_std.csv")
+if (file.exists(outpath)) {
+  cat(outpath, "already exists. Skipping.\n")
+} else {
+  std_df <- fullrun_df("std")
+  if (is.null(std_df)) {
+    cat("No results found. Skipping.")
+  } else {
+    cat("Writing", outpath, "\n")
+    write.csv(std_df, outpath, row.names = FALSE, quote = FALSE)
+  }
+}
+
+outpath <- here("full-run", "out", "results_ar2.csv")
+if (file.exists(outpath)) {
+  cat(outpath, "already exists. Skipping.\n")
+} else {
+  ar2_df <- fullrun_df("ar2")
+  if (is.null(ar2_df)) {
+    cat("No AR2 results found. Skipping.")
+  } else {
+    cat("Writing", outpath, "\n")
+    write.csv(ar2_df, outpath, row.names = FALSE, quote = FALSE)
+  }
+}
+
+outphat <- here("full-run", "out", "results_anisotropic.csv")
+if (file.exists(outpath)) {
+  cat(outpath, "already exists. Skipping.\n")
+} else {
+  aniso_df <- fullrun_df("anisotropic")
+  if (is.null(aniso_df)) {
+    cat("No anisotropic results found. Skipping.")
+  } else {
+    cat("Writing", outpath, "\n")
+    write.csv(aniso_df, outpath, row.names = FALSE, quote = FALSE)
+  }
+}
+
+outpath <- here("full-run", "out", "results_fgn.csv")
+if (file.exists(outpath)) {
+  cat(outpath, "already exists. Skipping.\n")
+} else {
+  fgn_df <- fullrun_df("fgn")
+  if (is.null(fgn_df)) {
+    cat("No FGN results found. Skipping.")
+  } else {
+    cat("Writing", outpath, "\n")
+    write.csv(fgn_df, outpath, row.names = FALSE, quote = FALSE)
+  }
 }

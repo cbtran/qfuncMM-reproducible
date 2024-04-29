@@ -24,7 +24,7 @@ time_sqrd_mat <- outer(seq_len(num_timept), seq_len(num_timept), `-`)^2
 
 error_na <- list(theta = rep(NA, 5), var_noise = rep(NA, 2))
 
-outpath <- paste0("full-run/out/", setting, sprintf("-result-%d-%d.rds", startid, endid))
+outpath <- paste0("full-run/out/", setting, sprintf("-result.rds"))
 
 run <- function(signal, runid) {
   # Stage 1 param list: phi_gamma, tau_gamma, k_gamma, nugget_gamma, var_noise

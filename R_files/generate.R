@@ -14,7 +14,6 @@ source(here("R_files/spatial-anisotropic.R"))
 # Expect argument such as "mid mid std"
 args <- commandArgs(trailingOnly = TRUE)
 covar_setting <- args[3]
-print(args)
 cat(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
 stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic"))
 n_sim <- as.numeric(args[4])
