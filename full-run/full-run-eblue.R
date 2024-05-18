@@ -64,7 +64,8 @@ for (delta in c("low", "mid", "high")) {
       saveRDS(eblues, outpath)
       cat("Saved", outpath, "\n")
     }
-    df <- tidyr::gather(data.frame(eblues), key = "pair", value = "value")
+    df <- tidyr::gather(data.frame(eblues), key = "pair", value = "value") |>
+      dplyr::select(value, pair, everything())
     df$method <- factor("EBLUE")
     df$yintercept <- ifelse(df$pair == "r12", 0.1,
                         ifelse(df$pair == "r13", 0.35, 0.6))

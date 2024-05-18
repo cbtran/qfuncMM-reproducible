@@ -10,7 +10,7 @@ source("R_files/covariances.R")
 #' @param shared_params vector of parameters shared across regions (tau_eta, nugget)
 #' @param region_params 3 x 7 dataframe of region-specific parameters.
 #'    rows (region 1, region 2, region 3)
-#'    columns (k_eta, phi_gamma, tau_gamma, k_gamma, nugget_gamma, mean, sigma2)
+#'    columns (k_eta, phi_gamma, tau_gamma, k_gamma, nugget_gamma, mean, var_noise)
 #' @param c_kernel_type Choice of spatial kernel. Defaul "matern_5_2".
 #' @return obs_signal Simulated signal
 generate_3_region_new <- function(
@@ -45,7 +45,7 @@ generate_3_region_new <- function(
     shared_params["nugget"] * diag(n_timept)
 
   k_eta_diag <- diag(sqrt(region_params$k_eta))
-  var_epsilon_sqrt <- diag(sqrt(region_params$sigma2))
+  var_epsilon_sqrt <- diag(sqrt(region_params$var_noise))
   eta_sigma <- kronecker(var_epsilon_sqrt %*% k_eta_diag %*% corr_mat %*% k_eta_diag %*% var_epsilon_sqrt, A)
 
   # Matrices of gamma effects. C is spatial correlation matrix, B is temporal covariance matrix
@@ -64,7 +64,7 @@ generate_3_region_new <- function(
   C2 <- spatial_covar_fn(voxel_coords$r2, phi_gamma[2])
   B2 <- k_gamma[2] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[2]) +
     nugget_gamma[2] * diag(n_timept)
-  gamma_sigma2 <- kronecker(C2, B2)
+  gamma_var_noise <- kronecker(C2, B2)
 
   ## Region 3
   C3 <- spatial_covar_fn(voxel_coords$r3, phi_gamma[3])
@@ -77,15 +77,15 @@ generate_3_region_new <- function(
           matrix(nrow = num_sim)
   gamma_r1 <- MASS::mvrnorm(
                 num_sim, mu = rep(0, n_voxel1 * n_timept),
-                Sigma = region_params$sigma2[1] * gamma_sigma1) |>
+                Sigma = region_params$var_noise[1] * gamma_sigma1) |>
               matrix(nrow = num_sim)
   gamma_r2 <- MASS::mvrnorm(
                 num_sim, mu = rep(0, n_voxel2 * n_timept),
-                Sigma = region_params$sigma2[2] * gamma_sigma2) |>
+                Sigma = region_params$var_noise[2] * gamma_var_noise) |>
               matrix(nrow = num_sim)
   gamma_r3 <- MASS::mvrnorm(
                 num_sim, mu = rep(0, n_voxel3 * n_timept),
-                Sigma = region_params$sigma2[3] * gamma_sigma3) |>
+                Sigma = region_params$var_noise[3] * gamma_sigma3) |>
               matrix(nrow = num_sim)
 
 
@@ -97,9 +97,9 @@ generate_3_region_new <- function(
   for (i in seq_along(obs_signal)) {
     # Generate iid noise
     noise <- c(
-      rnorm(n_voxel1 * n_timept, sd = sqrt(region_params$sigma2[1])),
-      rnorm(n_voxel2 * n_timept, sd = sqrt(region_params$sigma2[2])),
-      rnorm(n_voxel3 * n_timept, sd = sqrt(region_params$sigma2[3]))
+      rnorm(n_voxel1 * n_timept, sd = sqrt(region_params$var_noise[1])),
+      rnorm(n_voxel2 * n_timept, sd = sqrt(region_params$var_noise[2])),
+      rnorm(n_voxel3 * n_timept, sd = sqrt(region_params$var_noise[3]))
     )
 
     # Combine eta and gamma effects
@@ -222,7 +222,7 @@ generate_ar2_region <- function(num_sim, voxel_coords, n_timept,
   diag(corr_mat) <- 1
 
   k_eta_diag <- diag(sqrt(region_params$k_eta))
-  var_epsilon_sqrt <- diag(sqrt(region_params$sigma2))
+  var_epsilon_sqrt <- diag(sqrt(region_params$var_noise))
   eta_spatial <- var_epsilon_sqrt %*% k_eta_diag %*% corr_mat %*% k_eta_diag %*% var_epsilon_sqrt
   eta_lower <- t(chol(eta_spatial))
   eta <- temporal(num_sim, n_timept, 3, 1, eta_lower)
@@ -259,9 +259,9 @@ generate_ar2_region <- function(num_sim, voxel_coords, n_timept,
 
   for (i in seq_along(obs_signal)) {
     # Generate iid noise
-    noise <- c(rnorm(n_voxel1 * n_timept, sd = sqrt(region_params$sigma2[1])),
-               rnorm(n_voxel2 * n_timept, sd = sqrt(region_params$sigma2[2])),
-               rnorm(n_voxel3 * n_timept, sd = sqrt(region_params$sigma2[3])))
+    noise <- c(rnorm(n_voxel1 * n_timept, sd = sqrt(region_params$var_noise[1])),
+               rnorm(n_voxel2 * n_timept, sd = sqrt(region_params$var_noise[2])),
+               rnorm(n_voxel3 * n_timept, sd = sqrt(region_params$var_noise[3])))
 
     region1 <-
       matrix(rep(mu_1, n_voxel1) + rep(eta[i, 1:n_timept], n_voxel1)

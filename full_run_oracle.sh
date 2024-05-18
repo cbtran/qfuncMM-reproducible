@@ -1,15 +1,8 @@
 #!/bin/bash
 
-specs=("std" "fgn" "ar2" "anisotropic")
 levels=("low" "mid" "high")
 
 mkdir -p ./full-run/out
-
-# Check if $1 is one of the possible specs
-if [[ " ${specs[*]} " != *" $1 "* ]]; then
-    echo "Invalid specification. Please provide one of the following: std, fgn, ar2, anisotropic."
-    exit 1
-fi
 
 if [[ " ${levels[*]} " != *" $2 "* ]] && [[ "$2" != "all" ]]; then
     echo "Invalid delta. Please provide one of the following: low, mid, high, all."
@@ -25,9 +18,9 @@ fi
 if [[ "$2" == "all" ]]; then
     for delta in "${levels[@]}"; do
         for psi in "${levels[@]}"; do
-            Rscript R_files/full-run/full-run.R $delta $psi $1 1 100
+            Rscript R_files/full-run/full-run-oracle.R $delta $psi 1 100
         done
     done
 else
-    Rscript R_files/full-run/full-run.R $2 $3 $1 1 100
+    Rscript R_files/full-run/full-run-oracle.R $2 $3 1 100
 fi

@@ -10,11 +10,14 @@ error: false
 ```{r setup}
 #| include=FALSE
 library(tidyverse)
-library(reshape2)
+library(ggthemr)
 here::i_am("simulation-results.qmd")
 library(here)
 source(here("full-run", "full-run-df.R"))
 source(here("full-run", "full-run-eblue.R"))
+
+ggthemr("pale")
+lighten_swatch(amount = 0.05)
 
 create_boxplot <- function(ggdf, title, n = 100) {
    p <- ggplot(ggdf) +
@@ -28,7 +31,6 @@ create_boxplot <- function(ggdf, title, n = 100) {
    facet_grid(delta ~ psi,
                labeller = label_bquote(rows = delta == .(delta),
                                        cols = psi == .(psi))) +
-   theme_bw() +
    theme(strip.text.y = element_text(angle = 0)) +
    labs(x = "Region pair", y = "\u03C1") +
    ggtitle(title, subtitle = str_glue("n = {n}"))
@@ -44,28 +46,36 @@ anisotropic_df <- NULL
 
 results_path <- here("full-run", "out", "results_std.csv")
 if (file.exists(results_path)) {
-  std_df <- read_csv(results_path)
+  std_df <- read_csv(results_path, col_types = "dffdd")
+}
+
+results_path <- here("full-run", "out", "results_eblue.csv")
+if (file.exists(results_path)) {
+  eblue_df <- read_csv(results_path, col_types = "dffdd")
+  std_df <- bind_rows(std_df, eblue_df) |>
+    mutate(method = factor(method, c("CA", "EBLUE", "ReML")))
 }
 
 results_path <- here("full-run", "out", "results_ar2.csv")
 if (file.exists(results_path)) {
-  ar2_df <- read_csv(results_path)
+  ar2_df <- read_csv(results_path, col_types = "dffdd")
 }
 
 results_path <- here("full-run", "out", "results_fgn.csv")
 if (file.exists(results_path)) {
-  fgn_df <- read_csv(results_path)
+  fgn_df <- read_csv(results_path, col_types = "dffdd")
 }
 
 results_path <- here("full-run", "out", "results_anisotropic.csv")
 if (file.exists(results_path)) {
-  anisotropic_df <- read_csv(results_path)
+  anisotropic_df <- read_csv(results_path, col_types = "dffdd")
 }
 ```
 
 ```{r}
-#| echo=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=8, fig.align='center',
+#| fig.width=12, fig.height=8, fig.align='center',
 #| fig.cap="Correct specification"
-p <- create_boxplot(std_df, "Simulation results - correctly specified covariance structure")
+p <- rbind(std_df) |>
+  create_boxplot("Simulation results - correctly specified covariance structure")
 print(p)
 ```

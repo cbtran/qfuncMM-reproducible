@@ -1,9 +1,10 @@
 # Generate data for three-region regions using real voxel coordinates.
 # Run this script in the terminal as
-# >Rscript R_files/generate.R <delta> <psi> <spec> <nsim>
+# >Rscript R_files/generate.R <delta> <psi> <spec> <nsim> <seed>
 # where <delta> and <psi> is one of "high", "mid", "low",
-# <spec> is one of "std", "fgn", "ar2", "anisotropic".
-# <nsim> is the number of simulations to generate.
+# <spec> is one of "std", "fgn", "ar2", "anisotropic",
+# <nsim> is the number of simulations to generate,
+# <seed> is an integer seed for random number generation.
 
 
 here::i_am("R_files/generate.R")
@@ -70,7 +71,7 @@ region_parameters <- data.frame(
   k_gamma = rep(2, 3),
   nugget_gamma = rep(nugget_gamma, 3),
   mean = c(1, 10, 20),
-  sigma2 = c(1, 1, 1),
+  var_noise = c(1, 1, 1),
   row.names = c("region1", "region2", "region3")
 )
 shared_parameters <- c(tau_eta = 0.25, nugget = nugget_eta)
