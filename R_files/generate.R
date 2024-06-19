@@ -88,7 +88,7 @@ three_region <- switch(covar_setting,
       dist_sqrd_mat <- as.matrix(dist(coords))^2
       get_cor_mat("matern_5_2", dist_sqrd_mat, phi_gamma)
     }
-    generate_3_region_new(
+    generate_3_region(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, spatial,
       seed = seed
@@ -118,7 +118,7 @@ three_region <- switch(covar_setting,
     spatial <- function(coords, phi_gamma) {
       anisotropic(coords, phi_gamma, c(1, 1.2, 1.5), c(1, 1.2, 1.5))
     }
-    generate_3_region_new(
+    generate_3_region(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, spatial,
       seed = seed
@@ -126,21 +126,27 @@ three_region <- switch(covar_setting,
   }
 )
 
-out <- list(data = three_region,
-            setting = list(region_parameters = region_parameters,
-                           shared_parameters = shared_parameters,
-                           corr_true = corr_true,
-                           delta = delta,
-                           psi = psi),
-            seed = seed)
+out <- list(
+  data = three_region,
+  setting = list(
+    region_parameters = region_parameters,
+    shared_parameters = shared_parameters,
+    corr_true = corr_true,
+    delta = delta,
+    psi = psi
+  ),
+  seed = seed
+)
 
-outsetting <- paste0(names(delta_seq)[which(delta_seq == delta)],
-                     "-",
-                     names(psi_seq)[which(psi_seq == psi)],
-                     "-",
-                     "M60",
-                     "-",
-                     n_sim, "-rat")
+outsetting <- paste0(
+  names(delta_seq)[which(delta_seq == delta)],
+  "-",
+  names(psi_seq)[which(psi_seq == psi)],
+  "-",
+  "M60",
+  "-",
+  n_sim, "-rat"
+)
 if (covar_setting != "std") {
   outsetting <- paste0(outsetting, "-", covar_setting)
 }

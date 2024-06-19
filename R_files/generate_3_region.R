@@ -13,7 +13,7 @@ source("R_files/covariances.R")
 #'    columns (k_eta, phi_gamma, tau_gamma, k_gamma, nugget_gamma, mean, var_noise)
 #' @param c_kernel_type Choice of spatial kernel. Defaul "matern_5_2".
 #' @return obs_signal Simulated signal
-generate_3_region_new <- function(
+generate_3_region <- function(
     num_sim, voxel_coords, n_timept, true_corr, region_params, shared_params,
     spatial_covar_fn, seed = 1, c_kernel_type = "matern_5_2") {
   set.seed(seed + 1000)
@@ -198,14 +198,13 @@ generate_fgn <- function(n_sim, t, p, h, k_gamma, spatial_lower) {
 generate_ar2_region <- function(num_sim, voxel_coords, n_timept,
                                 true_corr, region_params, shared_params,
                                 temporal_covar_fn,
-                                seed = 1, c_kernel_type = "matern_5_2") {
+                                seed = 1) {
   set.seed(seed + 1000)
 
   stopifnot(n_timept >= 1)
   stopifnot(length(true_corr) == 3)
   stopifnot(length(shared_params) == 2)
   stopifnot(nrow(region_params) == 3 && ncol(region_params) == 7)
-  stopifnot(c_kernel_type %in% c("matern_5_2", "rbf"))
 
   n_voxel1 <- nrow(voxel_coords[[1]])
   n_voxel2 <- nrow(voxel_coords[[2]])
@@ -231,15 +230,15 @@ generate_ar2_region <- function(num_sim, voxel_coords, n_timept,
   k_gamma <- region_params$k_gamma
 
   ## Region 1
-  C1 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region1, phi_gamma[1])
+  C1 <- get_cor_mat("matern_5_2", dist_sqrd_mat_region1, phi_gamma[1])
   gamma_r1 <- temporal_covar_fn(num_sim, n_timept, n_voxel1, k_gamma[1], t(chol(C1)))
 
   ## Region 2
-  C2 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region2, phi_gamma[2])
+  C2 <- get_cor_mat("matern_5_2", dist_sqrd_mat_region2, phi_gamma[2])
   gamma_r2 <- temporal_covar_fn(num_sim, n_timept, n_voxel2, k_gamma[2], t(chol(C2)))
 
   ## Region 3
-  C3 <- get_cor_mat(c_kernel_type, dist_sqrd_mat_region3, phi_gamma[3])
+  C3 <- get_cor_mat("matern_5_2", dist_sqrd_mat_region3, phi_gamma[3])
   gamma_r3 <- temporal_covar_fn(num_sim, n_timept, n_voxel3, k_gamma[3], t(chol(C3)))
 
   mu_1 <- region_params$mean[1]
