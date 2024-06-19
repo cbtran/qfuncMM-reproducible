@@ -15,7 +15,7 @@ source("R_files/covariances.R")
 #' @return obs_signal Simulated signal
 generate_3_region <- function(
     num_sim, voxel_coords, n_timept, true_corr, region_params, shared_params,
-    spatial_covar_fn, seed = 1, c_kernel_type = "matern_5_2") {
+    spatial_covar_fn, seed = 1, c_kernel_type = "matern_5_2", diag_time = FALSE) {
   set.seed(seed + 1000)
 
   stopifnot(n_timept >= 1)
@@ -41,8 +41,10 @@ generate_3_region <- function(
   diag(corr_mat) <- 1
 
   # Covariance of eta effect
-  A <- get_cor_mat("rbf", timesqrd_mat, shared_params["tau_eta"]) +
-    shared_params["nugget"] * diag(n_timept)
+  A <- diag(n_timept)
+  if (!diag_time) {
+    A <- A + get_cor_mat("rbf", timesqrd_mat, shared_params["tau_eta"])
+  }
 
   k_eta_diag <- diag(sqrt(region_params$k_eta))
   var_epsilon_sqrt <- diag(sqrt(region_params$var_noise))
@@ -64,7 +66,7 @@ generate_3_region <- function(
   C2 <- spatial_covar_fn(voxel_coords$r2, phi_gamma[2])
   B2 <- k_gamma[2] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[2]) +
     nugget_gamma[2] * diag(n_timept)
-  gamma_var_noise <- kronecker(C2, B2)
+  gamma_sigma2 <- kronecker(C2, B2)
 
   ## Region 3
   C3 <- spatial_covar_fn(voxel_coords$r3, phi_gamma[3])
@@ -73,20 +75,28 @@ generate_3_region <- function(
   gamma_sigma3 <- kronecker(C3, B3)
 
   eta <- MASS::mvrnorm(
-          num_sim, mu = rep(0, 3 * n_timept), Sigma = eta_sigma) |>
-          matrix(nrow = num_sim)
+    num_sim,
+    mu = rep(0, 3 * n_timept), Sigma = eta_sigma
+  ) |>
+    matrix(nrow = num_sim)
   gamma_r1 <- MASS::mvrnorm(
-                num_sim, mu = rep(0, n_voxel1 * n_timept),
-                Sigma = region_params$var_noise[1] * gamma_sigma1) |>
-              matrix(nrow = num_sim)
+    num_sim,
+    mu = rep(0, n_voxel1 * n_timept),
+    Sigma = region_params$var_noise[1] * gamma_sigma1
+  ) |>
+    matrix(nrow = num_sim)
   gamma_r2 <- MASS::mvrnorm(
-                num_sim, mu = rep(0, n_voxel2 * n_timept),
-                Sigma = region_params$var_noise[2] * gamma_var_noise) |>
-              matrix(nrow = num_sim)
+    num_sim,
+    mu = rep(0, n_voxel2 * n_timept),
+    Sigma = region_params$var_noise[2] * gamma_sigma2
+  ) |>
+    matrix(nrow = num_sim)
   gamma_r3 <- MASS::mvrnorm(
-                num_sim, mu = rep(0, n_voxel3 * n_timept),
-                Sigma = region_params$var_noise[3] * gamma_sigma3) |>
-              matrix(nrow = num_sim)
+    num_sim,
+    mu = rep(0, n_voxel3 * n_timept),
+    Sigma = region_params$var_noise[3] * gamma_sigma3
+  ) |>
+    matrix(nrow = num_sim)
 
 
   mu_1 <- region_params$mean[1]
@@ -125,8 +135,9 @@ generate_3_region <- function(
     )
   }
 
-  if (num_sim == 1)
+  if (num_sim == 1) {
     return(obs_signal[[1]])
+  }
   return(obs_signal)
 }
 
@@ -154,7 +165,7 @@ generate_ar2 <- function(n_sim, t, p, cor1, cor2, k_gamma, spatial_lower) {
   ar_coef <- function(xi) {
     x <- xi[1]
     y <- xi[2]
-    c(1/x + 1/y, -1/(x * y))
+    c(1 / x + 1 / y, -1 / (x * y))
   }
   phi <- ar_coef(xi)
 
@@ -248,43 +259,53 @@ generate_ar2_region <- function(num_sim, voxel_coords, n_timept,
   obs_signal <- vector(mode = "list", length = num_sim)
 
   dwt <- function(region) {
-      dwt_ts <- lapply(seq_len(ncol(region)), \(i) {
-        moddwtY <- waveslim::dwt.nondyadic(region[, i])
-        vdwtY <- na.omit(waveslim::brick.wall(moddwtY, wf = "la8", method = "dwt")$d4)
-        vdwtY
-      })
-      Reduce(cbind, dwt_ts)
+    dwt_ts <- lapply(seq_len(ncol(region)), \(i) {
+      moddwtY <- waveslim::dwt.nondyadic(region[, i])
+      vdwtY <- na.omit(waveslim::brick.wall(moddwtY, wf = "la8", method = "dwt")$d4)
+      vdwtY
+    })
+    Reduce(cbind, dwt_ts)
   }
 
   for (i in seq_along(obs_signal)) {
     # Generate iid noise
-    noise <- c(rnorm(n_voxel1 * n_timept, sd = sqrt(region_params$var_noise[1])),
-               rnorm(n_voxel2 * n_timept, sd = sqrt(region_params$var_noise[2])),
-               rnorm(n_voxel3 * n_timept, sd = sqrt(region_params$var_noise[3])))
+    noise <- c(
+      rnorm(n_voxel1 * n_timept, sd = sqrt(region_params$var_noise[1])),
+      rnorm(n_voxel2 * n_timept, sd = sqrt(region_params$var_noise[2])),
+      rnorm(n_voxel3 * n_timept, sd = sqrt(region_params$var_noise[3]))
+    )
 
     region1 <-
-      matrix(rep(mu_1, n_voxel1) + rep(eta[i, 1:n_timept], n_voxel1)
-             + gamma_r1[i, ] + noise[1:(n_voxel1 * n_timept)],
-             nrow = n_timept, ncol = n_voxel1)
+      matrix(
+        rep(mu_1, n_voxel1) + rep(eta[i, 1:n_timept], n_voxel1)
+          + gamma_r1[i, ] + noise[1:(n_voxel1 * n_timept)],
+        nrow = n_timept, ncol = n_voxel1
+      )
 
     region2 <-
-      matrix(rep(mu_2, n_voxel2) + rep(eta[i, (n_timept + 1):(2 * n_timept)], n_voxel2)
-             + gamma_r2[i, ] + noise[(n_voxel1 * n_timept + 1):((n_voxel1 + n_voxel2) * n_timept)],
-             nrow = n_timept, ncol = n_voxel2)
+      matrix(
+        rep(mu_2, n_voxel2) + rep(eta[i, (n_timept + 1):(2 * n_timept)], n_voxel2)
+          + gamma_r2[i, ] + noise[(n_voxel1 * n_timept + 1):((n_voxel1 + n_voxel2) * n_timept)],
+        nrow = n_timept, ncol = n_voxel2
+      )
 
     region3 <-
-      matrix(rep(mu_3, n_voxel3) + rep(eta[i, (2 * n_timept + 1):(3 * n_timept)], n_voxel3)
-             + gamma_r3[i, ] + noise[((n_voxel1 + n_voxel2) * n_timept + 1):(n_voxel_total * n_timept)],
-             nrow = n_timept, ncol = n_voxel3)
+      matrix(
+        rep(mu_3, n_voxel3) + rep(eta[i, (2 * n_timept + 1):(3 * n_timept)], n_voxel3)
+          + gamma_r3[i, ] + noise[((n_voxel1 + n_voxel2) * n_timept + 1):(n_voxel_total * n_timept)],
+        nrow = n_timept, ncol = n_voxel3
+      )
 
     # Combine eta and gamma effects
     obs_signal[[i]] <- list(
       region1 = dwt(region1),
       region2 = dwt(region2),
-      region3 = dwt(region3))
+      region3 = dwt(region3)
+    )
   }
 
-  if (num_sim == 1)
+  if (num_sim == 1) {
     return(obs_signal[[1]])
+  }
   return(obs_signal)
 }

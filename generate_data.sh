@@ -1,6 +1,6 @@
 #!/bin/bash
 
-settings=("std" "fgn" "ar2" "anisotropic")
+settings=("std" "fgn" "ar2" "anisotropic", "diag_time")
 
 mkdir -p ./full-run/data
 

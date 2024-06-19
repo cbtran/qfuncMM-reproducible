@@ -16,7 +16,7 @@ source(here("R_files/spatial-anisotropic.R"))
 args <- commandArgs(trailingOnly = TRUE)
 covar_setting <- args[3]
 cat(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
-stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic"))
+stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "diag_time"))
 n_sim <- as.numeric(args[4])
 seed <- as.numeric(args[5])
 
@@ -27,6 +27,10 @@ if (covar_setting == "ar2") {
   nugget_eta <- 0
 }
 k_gamma <- 2
+if (covar_setting == "diag_time") {
+  k_gamma <- 0
+  nugget_eta <- 1
+}
 delta_fn <- function(x) {
   x * (1 + nugget_eta) / (x * (1 + nugget_eta) + k_gamma + nugget_gamma)
 }
@@ -64,17 +68,24 @@ print(paste0("delta = ", delta, ", psi = ", psi))
 kEta <- kEta_seq[which(delta_seq == delta)]
 phi <- phi_seq[, which(psi_seq == psi)] # mid
 
+tau_gamma <- 0.5
+tau_eta <- 0.25
+if (covar_setting == "diag_time") {
+  tau_gamma <- 1
+  tau_eta <- NA
+}
+
 region_parameters <- data.frame(
   k_eta = rep(kEta, 3),
   phi_gamma = phi,
-  tau_gamma = rep(0.5, 3),
-  k_gamma = rep(2, 3),
+  tau_gamma = rep(tau_gamma, 3),
+  k_gamma = rep(k_gamma, 3),
   nugget_gamma = rep(nugget_gamma, 3),
   mean = c(1, 10, 20),
   var_noise = c(1, 1, 1),
   row.names = c("region1", "region2", "region3")
 )
-shared_parameters <- c(tau_eta = 0.25, nugget = nugget_eta)
+shared_parameters <- c(tau_eta = tau_eta, nugget = nugget_eta)
 corr_true <- c(rho12 = 0.1, rho13 = 0.35, rho23 = 0.6)
 
 n_timept <- 60
@@ -91,7 +102,18 @@ three_region <- switch(covar_setting,
     generate_3_region(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, spatial,
-      seed = seed
+      seed = seed, diag_time = covar_setting == "diag_time"
+    )
+  },
+  "diag_time" = {
+    spatial <- function(coords, phi_gamma) {
+      dist_sqrd_mat <- as.matrix(dist(coords))^2
+      get_cor_mat("matern_5_2", dist_sqrd_mat, phi_gamma)
+    }
+    generate_3_region(
+      n_sim, voxel_coords, n_timept, corr_true,
+      region_parameters, shared_parameters, spatial,
+      seed = seed, diag_time = covar_setting == "diag_time"
     )
   },
   "ar2" = {
