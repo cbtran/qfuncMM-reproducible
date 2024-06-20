@@ -27,10 +27,6 @@ generate_3_region <- function(
   n_voxel1 <- nrow(voxel_coords[[1]])
   n_voxel2 <- nrow(voxel_coords[[2]])
   n_voxel3 <- nrow(voxel_coords[[3]])
-  # Get distance and time matrices
-  dist_sqrd_mat_region1 <- as.matrix(dist(voxel_coords[[1]]))^2
-  dist_sqrd_mat_region2 <- as.matrix(dist(voxel_coords[[2]]))^2
-  dist_sqrd_mat_region3 <- as.matrix(dist(voxel_coords[[3]]))^2
   timesqrd_mat <- (outer(1:n_timept, 1:n_timept, `-`))^2
 
   # Create covariance matrices

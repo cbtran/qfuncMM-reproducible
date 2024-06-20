@@ -14,13 +14,18 @@ psi <- args[2]
 spec <- args[3]
 startid <- args[4]
 endid <- args[5]
+dataids <- seq(startid, endid)
+nsim <- length(dataids)
 
-setting <- paste0(delta, "-", psi, "-M60-100-rat-", spec)
-if (spec == "std")
-  setting <- paste0(delta, "-", psi, "-M60-100-rat")
+setting <- paste0(delta, "-", psi, "-M60-100-", spec)
 
 voxel_coords <- readRDS("full-run/rat_coords.rds")
-all_data <- readRDS(paste0("full-run/data/", setting, ".rds"))
+datapath <- paste0("full-run/data/", setting, ".rds")
+if (!file.exists(datapath))
+  stop(sprintf("%s not found. Generate the data first."))
+all_data <- readRDS(datapath)
+if (!dir.exists("full-run/out"))
+  dir.create("full-run/out")
 outpath <- paste0("full-run/out/", setting, "-result.rds")
 
 message(sprintf("Running spec=%s, delta=%s, psi=%s, %d simulations\n",
@@ -47,14 +52,12 @@ run <- function(signal, runid) {
   ))
 }
 
-dataids <- seq(startid, endid)
-nsim <- length(dataids)
 results_rho <- array(dim = c(3, 3, nsim), dimnames = list(
   c("rho", "rho_eblue", "rho_ca"),
   c("r12", "r13", "r23"), NULL))
 results_stage2 <- array(dim = c(4, 3, nsim))
 dimnames(results_stage2) <- list(
-  c("kEta1", "kEta2", "tauEta", "nugget"),
+  c("k_eta1", "k_eta2", "tau_eta", "nugget_eta"),
   c("r12", "r13", "r23"), NULL)
 results_stage1 <- array(dim = c(5, 3, nsim))
 dimnames(results_stage1) <- list(

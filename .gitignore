@@ -13,6 +13,7 @@ hcp/*.txt
 hcp/*.zip
 !full-run/rat_coords.rds
 *.rds
+*.job
 
 # Prerequisites
 *.d

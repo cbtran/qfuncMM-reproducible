@@ -1,19 +1,17 @@
-here::i_am("full-run/full-run-df.R")
+suppressMessages(here::i_am("full-run/full-run-df.R"))
 library(here)
 library(dplyr)
 
 fullrun_df <- function(covar_setting) {
   stopifnot(covar_setting %in% c("std", "ar2", "anisotropic", "fgn"))
   n_timept <- 60
-  covar_prefix <- ""
-  if (covar_setting != "std")
-    covar_prefix <- paste0("-", covar_setting)
+  covar_prefix <- paste0("-", covar_setting)
   df_list <- vector("list", length = 9)
 
   dfid <- 1
   for (delta in c("high", "mid", "low")) {
     for (psi in c("low", "mid", "high")) {
-      setting <- paste0(delta, "-", psi, "-M", n_timept, "-100-rat", covar_prefix)
+      setting <- paste0(delta, "-", psi, "-M", n_timept, "-100", covar_prefix)
       resultpath <- here("full-run", "out", paste0(setting, "-result.rds"))
       if (!file.exists(resultpath)) {
         # cat("Setting", paste0(delta, "-", psi), "does not exist yet. Skipping.\n")

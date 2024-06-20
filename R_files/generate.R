@@ -7,7 +7,7 @@
 # <seed> is an integer seed for random number generation.
 
 
-here::i_am("R_files/generate.R")
+suppressMessages(here::i_am("R_files/generate.R"))
 library(here)
 source(here("R_files/generate_3_region.R"))
 source(here("R_files/spatial-anisotropic.R"))
@@ -15,7 +15,7 @@ source(here("R_files/spatial-anisotropic.R"))
 # Expect argument such as "mid mid std"
 args <- commandArgs(trailingOnly = TRUE)
 covar_setting <- args[3]
-cat(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
+message(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
 stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "diag_time"))
 n_sim <- as.numeric(args[4])
 seed <- as.numeric(args[5])
@@ -63,7 +63,6 @@ phi_seq <- Reduce(rbind, phi_seq)
 # Set delta and psi based on the input
 delta <- delta_seq[args[1]]
 psi <- psi_seq[args[2]]
-print(paste0("delta = ", delta, ", psi = ", psi))
 
 kEta <- kEta_seq[which(delta_seq == delta)]
 phi <- phi_seq[, which(psi_seq == psi)] # mid
@@ -174,4 +173,4 @@ if (covar_setting != "std") {
 }
 outpath <- here("full-run/data", paste0(outsetting, ".rds"))
 saveRDS(out, outpath)
-cat("Saved to", outpath, "\n")
+message("Saved to ", outpath)

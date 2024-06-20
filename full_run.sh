@@ -1,6 +1,10 @@
 #!/bin/bash
 
-specs=("std" "fgn" "ar2" "anisotropic")
+# Example usage:
+# ./full_run.sh std high high
+# ./full_run.sh std all
+
+specs=("std" "fgn" "ar2" "anisotropic" "diag_time")
 levels=("low" "mid" "high")
 
 mkdir -p ./full-run/out
@@ -25,9 +29,9 @@ fi
 if [[ "$2" == "all" ]]; then
     for delta in "${levels[@]}"; do
         for psi in "${levels[@]}"; do
-            Rscript R_files/full-run/full-run.R $delta $psi $1 1 100
+            Rscript full-run/full-run.R $delta $psi $1 1 100
         done
     done
 else
-    Rscript R_files/full-run/full-run.R $2 $3 $1 1 100
+    Rscript full-run/full-run.R $2 $3 $1 1 100
 fi

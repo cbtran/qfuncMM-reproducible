@@ -18,9 +18,9 @@ fi
 if [[ "$2" == "all" ]]; then
     for delta in "${levels[@]}"; do
         for psi in "${levels[@]}"; do
-            Rscript R_files/full-run/full-run-oracle.R $delta $psi 1 100
+            Rscript full-run/full-run-oracle.R $delta $psi 1 100
         done
     done
 else
-    Rscript R_files/full-run/full-run-oracle.R $2 $3 1 100
+    Rscript full-run/full-run-oracle.R $2 $3 1 100
 fi

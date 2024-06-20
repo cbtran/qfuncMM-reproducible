@@ -8,7 +8,7 @@ library(qfuncMM)
 set.seed(100)
 
 args <- commandArgs(trailingOnly = TRUE)
-setting <- paste0(args[1], "-", args[2], "-M60-100-rat")
+setting <- paste0(args[1], "-", args[2], "-M60-100-std")
 startid <- args[3]
 endid <- args[4]
 
@@ -21,7 +21,7 @@ std_result <- readRDS(std_result_path)
 voxel_coords <- readRDS("full-run/rat_coords.rds")
 allsignals <- readRDS(paste0("full-run/data/", setting, ".rds"))
 
-num_timept <- 60
+num_timept <- nrow(allsignals$data[[1]]$region1)
 time_sqrd_mat <- outer(seq_len(num_timept), seq_len(num_timept), `-`)^2
 
 stage1_names <- c("phi_gamma", "tau_gamma", "k_gamma", "nugget_gamma", "var_noise")
@@ -71,8 +71,8 @@ dataids <- seq(startid, endid)
 nsim <- length(dataids)
 rho_all <- matrix(nrow = nsim, ncol = 3, dimnames = list(NULL, c("r12", "r13", "r23")))
 stage2_all <- array(dim = c(4, 3, nsim),
-                    dimnames = list(c("kEta1", "kEta2", "tauEta", "nugget"),
-                                            c("r12", "r13", "r23"), NULL))
+                    dimnames = list(c("k_eta1", "k_eta2", "tau_eta", "nugget_eta"),
+                                    c("r12", "r13", "r23"), NULL))
 for (i in dataids) {
   d <- allsignals$data[[i]]
   run_result <- run(d, i)
