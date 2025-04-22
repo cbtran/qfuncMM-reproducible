@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Example usage:
-# ./full_run.sh std high high
-# ./full_run.sh std all
+# ./full_run.sh std high high 1 standard
+# ./full_run.sh std all 1e-2 noiseless
 
 specs=("std" "fgn" "ar2" "anisotropic" "diag_time")
 levels=("low" "mid" "high")
@@ -29,9 +29,9 @@ fi
 if [[ "$2" == "all" ]]; then
     for delta in "${levels[@]}"; do
         for psi in "${levels[@]}"; do
-            Rscript full-run/full-run.R $delta $psi $1 1 100
+            Rscript full-run/full-run.R $1 $delta $psi $2 $3 1 100
         done
     done
 else
-    Rscript full-run/full-run.R $2 $3 $1 1 100
+    Rscript full-run/full-run.R $1 $2 $3 $4 $5 1 100
 fi

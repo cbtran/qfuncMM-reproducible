@@ -1,11 +1,11 @@
 # Generate data for three-region regions using real voxel coordinates.
 # Run this script in the terminal as
-# >Rscript R_files/generate.R <delta> <psi> <spec> <nsim> <seed>
+# >Rscript R_files/generate.R <delta> <psi> <spec> <noise_level> <nsim> <seed>
 # where <delta> and <psi> is one of "high", "mid", "low",
-# <spec> is one of "std", "fgn", "ar2", "anisotropic",
+# <spec> is one of "std", "fgn", "ar2", "anisotropic", "diag_time"
+# <noise_level> specifies the overall noise variance
 # <nsim> is the number of simulations to generate,
 # <seed> is an integer seed for random number generation.
-
 
 suppressMessages(here::i_am("R_files/generate.R"))
 library(here)
@@ -14,11 +14,15 @@ source(here("R_files/spatial-anisotropic.R"))
 
 # Expect argument such as "mid mid std"
 args <- commandArgs(trailingOnly = TRUE)
+delta_name <- args[1]
+psi_name <- args[2]
 covar_setting <- args[3]
 message(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
-stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "diag_time"))
-n_sim <- as.numeric(args[4])
-seed <- as.numeric(args[5])
+stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "std_diag_time"))
+noise_level_str <- args[4]
+noise_level <- as.numeric(noise_level_str)
+n_sim <- as.numeric(args[5])
+seed <- as.numeric(args[6])
 
 nugget_gamma <- 0.1
 nugget_eta <- 0.1
@@ -61,8 +65,8 @@ phi_seq <- lapply(
 phi_seq <- Reduce(rbind, phi_seq)
 
 # Set delta and psi based on the input
-delta <- delta_seq[args[1]]
-psi <- psi_seq[args[2]]
+delta <- delta_seq[delta_name]
+psi <- psi_seq[psi_name]
 
 kEta <- kEta_seq[which(delta_seq == delta)]
 phi <- phi_seq[, which(psi_seq == psi)] # mid
@@ -81,7 +85,7 @@ region_parameters <- data.frame(
   k_gamma = rep(k_gamma, 3),
   nugget_gamma = rep(nugget_gamma, 3),
   mean = c(1, 10, 20),
-  var_noise = c(1, 1, 1),
+  var_noise = rep(noise_level, 3),
   row.names = c("region1", "region2", "region3")
 )
 shared_parameters <- c(tau_eta = tau_eta, nugget = nugget_eta)
@@ -101,10 +105,10 @@ three_region <- switch(covar_setting,
     generate_3_region(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, spatial,
-      seed = seed, diag_time = covar_setting == "diag_time"
+      seed = seed
     )
   },
-  "diag_time" = {
+  "std_diag_time" = {
     spatial <- function(coords, phi_gamma) {
       dist_sqrd_mat <- as.matrix(dist(coords))^2
       get_cor_mat("matern_5_2", dist_sqrd_mat, phi_gamma)
@@ -112,7 +116,7 @@ three_region <- switch(covar_setting,
     generate_3_region(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, spatial,
-      seed = seed, diag_time = covar_setting == "diag_time"
+      seed = seed, covar_spec = "diag_time"
     )
   },
   "ar2" = {
@@ -154,23 +158,13 @@ out <- list(
     shared_parameters = shared_parameters,
     corr_true = corr_true,
     delta = delta,
-    psi = psi
+    psi = psi,
+    noise_level = noise_level
   ),
   seed = seed
 )
 
-outsetting <- paste0(
-  names(delta_seq)[which(delta_seq == delta)],
-  "-",
-  names(psi_seq)[which(psi_seq == psi)],
-  "-",
-  "M60",
-  "-",
-  n_sim, "-rat"
-)
-if (covar_setting != "std") {
-  outsetting <- paste0(outsetting, "-", covar_setting)
-}
-outpath <- here("full-run/data", paste0(outsetting, ".rds"))
+outsetting <- sprintf("%s-%s-M%d-%d-%s-noise%s.rds", delta_name, psi_name, 60, n_sim, covar_setting, noise_level_str)
+outpath <- here("full-run", "data", outsetting)
 saveRDS(out, outpath)
 message("Saved to ", outpath)

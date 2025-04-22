@@ -15,7 +15,8 @@ source("R_files/covariances.R")
 #' @return obs_signal Simulated signal
 generate_3_region <- function(
     num_sim, voxel_coords, n_timept, true_corr, region_params, shared_params,
-    spatial_covar_fn, seed = 1, c_kernel_type = "matern_5_2", diag_time = FALSE) {
+    spatial_covar_fn, seed = 1, c_kernel_type = "matern_5_2", covar_spec = c("standard", "diag_time")) {
+  covar_spec <- match.arg(covar_spec)
   set.seed(seed + 1000)
 
   stopifnot(n_timept >= 1)
@@ -38,13 +39,12 @@ generate_3_region <- function(
 
   # Covariance of eta effect
   A <- diag(n_timept)
-  if (!diag_time) {
+  if (covar_spec != "diag_time") {
     A <- A + get_cor_mat("rbf", timesqrd_mat, shared_params["tau_eta"])
   }
 
   k_eta_diag <- diag(sqrt(region_params$k_eta))
-  var_epsilon_sqrt <- diag(sqrt(region_params$var_noise))
-  eta_sigma <- kronecker(var_epsilon_sqrt %*% k_eta_diag %*% corr_mat %*% k_eta_diag %*% var_epsilon_sqrt, A)
+  eta_sigma <- kronecker(k_eta_diag %*% corr_mat %*% k_eta_diag, A)
 
   # Matrices of gamma effects. C is spatial correlation matrix, B is temporal covariance matrix
   phi_gamma <- region_params$phi_gamma
@@ -73,27 +73,19 @@ generate_3_region <- function(
   eta <- MASS::mvrnorm(
     num_sim,
     mu = rep(0, 3 * n_timept), Sigma = eta_sigma
-  ) |>
-    matrix(nrow = num_sim)
+  ) |> matrix(nrow = num_sim)
   gamma_r1 <- MASS::mvrnorm(
     num_sim,
-    mu = rep(0, n_voxel1 * n_timept),
-    Sigma = region_params$var_noise[1] * gamma_sigma1
-  ) |>
-    matrix(nrow = num_sim)
+    mu = rep(0, n_voxel1 * n_timept), Sigma = gamma_sigma1
+  ) |> matrix(nrow = num_sim)
   gamma_r2 <- MASS::mvrnorm(
     num_sim,
-    mu = rep(0, n_voxel2 * n_timept),
-    Sigma = region_params$var_noise[2] * gamma_sigma2
-  ) |>
-    matrix(nrow = num_sim)
+    mu = rep(0, n_voxel2 * n_timept), Sigma = gamma_sigma2
+  ) |> matrix(nrow = num_sim)
   gamma_r3 <- MASS::mvrnorm(
     num_sim,
-    mu = rep(0, n_voxel3 * n_timept),
-    Sigma = region_params$var_noise[3] * gamma_sigma3
-  ) |>
-    matrix(nrow = num_sim)
-
+    mu = rep(0, n_voxel3 * n_timept), Sigma = gamma_sigma3
+  ) |> matrix(nrow = num_sim)
 
   mu_1 <- region_params$mean[1]
   mu_2 <- region_params$mean[2]
