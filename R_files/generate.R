@@ -177,4 +177,4 @@ out <- list(
 outname <- sprintf("%s-%s.rds", delta_name, psi_name)
 outpath <- file.path(outdir, outname)
 saveRDS(out, outpath)
-message("Saved to ", outpath)
+message("Saved to ", normalizePath(outpath))

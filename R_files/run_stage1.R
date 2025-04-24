@@ -28,7 +28,10 @@ if (!dir.exists(out_dir)) {
 }
 # Construct the full path for the specific data specification
 data_spec_dir <- file.path(data_dir, data_spec)
-out_dir_spec <- file.path(out_dir, data_spec, "stage1")
+out_spec_dir <- file.path(out_dir, data_spec, "stage1")
+if (cov_setting == "noiseless") {
+  out_spec_dir <- file.path(out_dir, paste0(data_spec, "-noiseless"), "stage1")
+}
 
 # Check if the directory exists
 if (!dir.exists(data_spec_dir)) {
@@ -37,6 +40,8 @@ if (!dir.exists(data_spec_dir)) {
     "'. Generate the data first."
   ))
 }
+
+dir.create(out_spec_dir, recursive = TRUE, showWarnings = FALSE)
 
 voxel_coords <- readRDS(file.path("R_files", "rat_coords.rds"))
 
@@ -52,10 +57,10 @@ for (delta in c("high", "mid", "low")) {
       for (regid in 1:3) {
         region_data <- d[[regid]]
         region_coords <- voxel_coords[[regid]]
-        qfuncMM::qfuncMM_stage1_intra(sim_name, regid, sprintf("simulated region - sim %d, reg %d", simid, regid),
+        qfuncMM::qfuncMM_stage1(sim_name, regid, sprintf("simulated region - sim %d, reg %d", simid, regid),
           region_data, region_coords,
           cov_setting = cov_setting,
-          out_dir = out_dir_spec,
+          out_dir = out_spec_dir,
           save_data_and_coords = FALSE,
           overwrite = TRUE
         )

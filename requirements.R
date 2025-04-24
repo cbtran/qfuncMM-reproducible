@@ -24,10 +24,10 @@ if (!"remotes" %in% installed) {
   install.packages("remotes", repos = "https://cloud.r-project.org")
 }
 
-if (!"qfuncMM" %in% installed) {
-  remotes::install_github("cbtran/qfuncMM@dev")
+if (!"GpGpQFuncMM" %in% installed) {
+  remotes::install_github("roobnloo/GpGp-qfuncMM")
 }
 
-if (!"GpGp" %in% installed) {
-  remotes::install_github("roobnloo/GpGp-qfuncMM")
+if (!"qfuncMM" %in% installed) {
+  remotes::install_github("cbtran/qfuncMM@dev")
 }

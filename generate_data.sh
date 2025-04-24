@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run with ./generate_data.sh nsim seed
+# Run with ./generate_data.sh data_dir nsim seed
 # nsim is optional and defaults to 100
 # seed is optional and defaults to 1234
 
