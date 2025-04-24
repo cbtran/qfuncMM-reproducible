@@ -1,16 +1,14 @@
 # Generate data for three-region regions using real voxel coordinates.
 # Run this script in the terminal as
-# >Rscript R_files/generate.R <delta> <psi> <spec> <noise_level> <nsim> <seed>
+# >Rscript R_files/generate.R <delta> <psi> <spec> <noise_level> <nsim> <seed> <outdir>
 # where <delta> and <psi> is one of "high", "mid", "low",
 # <spec> is one of "std", "fgn", "ar2", "anisotropic", "diag_time"
 # <noise_level> specifies the overall noise variance
 # <nsim> is the number of simulations to generate,
 # <seed> is an integer seed for random number generation.
 
-suppressMessages(here::i_am("R_files/generate.R"))
-library(here)
-source(here("R_files/generate_3_region.R"))
-source(here("R_files/spatial-anisotropic.R"))
+source("R_files/generate_3_region.R")
+source("R_files/spatial-anisotropic.R")
 
 # Expect argument such as "mid mid std"
 args <- commandArgs(trailingOnly = TRUE)
@@ -18,11 +16,23 @@ delta_name <- args[1]
 psi_name <- args[2]
 covar_setting <- args[3]
 message(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
-stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "std_diag_time"))
+stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic"))
 noise_level_str <- args[4]
 noise_level <- as.numeric(noise_level_str)
 n_sim <- as.numeric(args[5])
 seed <- as.numeric(args[6])
+outdir <- args[7]
+
+# Verify that outdir is a valid writeable directory
+if (!dir.exists(outdir)) {
+  stop(sprintf("Output directory '%s' does not exist", outdir))
+}
+if (!file.info(outdir)$isdir) {
+  stop(sprintf("'%s' is not a directory", outdir))
+}
+if (file.access(outdir, 2) != 0) {
+  stop(sprintf("Output directory '%s' is not writeable", outdir))
+}
 
 nugget_gamma <- 0.1
 nugget_eta <- 0.1
@@ -45,7 +55,7 @@ kEta_seq <- sapply(delta_seq, function(y) {
   uniroot(function(x) delta_fn(x) - y, interval = c(0, 20))$root
 })
 
-voxel_coords <- readRDS(here("full-run/rat_coords.rds"))
+voxel_coords <- readRDS(file.path("R_files", "rat_coords.rds"))
 sqrd_dist <- lapply(voxel_coords, \(coords) as.matrix(dist(coords))^2)
 
 psi_fn <- function(phi, dist_sqrd) {
@@ -164,7 +174,7 @@ out <- list(
   seed = seed
 )
 
-outsetting <- sprintf("%s-%s-M%d-%d-%s-noise%s.rds", delta_name, psi_name, 60, n_sim, covar_setting, noise_level_str)
-outpath <- here("full-run", "data", outsetting)
+outname <- sprintf("%s-%s.rds", delta_name, psi_name)
+outpath <- file.path(outdir, outname)
 saveRDS(out, outpath)
 message("Saved to ", outpath)

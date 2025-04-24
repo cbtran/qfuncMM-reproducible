@@ -1,39 +1,43 @@
 #!/bin/bash
-# Run with ./generate_data.sh std noise_level seed
+# Run with ./generate_data.sh nsim seed
+# nsim is optional and defaults to 100
 # seed is optional and defaults to 1234
+
+export BLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=10
+export MKL_NUM_THREADS=10
 
 specs=("std" "fgn" "ar2" "anisotropic")
 
-mkdir -p ./full-run/data
+outdir=$1
+mkdir -p $outdir
 
-# If no command line arguments were provided, default to "all"
-if [ $# -eq 0 ]; then
-    set -- "all"
-fi
-
-# Set variables from arguments with defaults
-spec=$1
-noise_level=${2:-1}
+nsim=${2:-100}
 seed=${3:-1234}
 
-# Check if the input is one of the possible specs or "all"
-if [[ " ${specs[*]} " == *" $spec "* ]] || [[ "$spec" == "all" ]]; then
-    # If "all", loop through all possible specs
-    if [[ "$spec" == "all" ]]; then
-        for setting in "${specs[@]}"; do
-            for delta in low mid high; do
-                for psi in low mid high; do
-                    Rscript R_files/generate.R $delta $psi $setting $noise_level 100 $seed
-                done
-            done
+noise_level=1
+for setting in "${specs[@]}"; do
+    echo "Generating $setting data with noise level $noise_level"
+    for delta in low mid high; do
+        for psi in low mid high; do
+            suffix="$setting/"
+            output_dir="$outdir/$suffix"
+            mkdir -p "$output_dir"
+            Rscript R_files/generate.R $delta $psi $setting $noise_level $nsim $seed "$output_dir"
         done
-    else
-        for delta in low mid high; do
-            for psi in low mid high; do
-                Rscript R_files/generate.R $delta $psi $spec $noise_level 100 $seed
-            done
+    done
+done
+
+noise_levels=("1e-2" "1e-3" "1e-7")
+setting="std"
+for noise_level in "${noise_levels[@]}"; do
+    echo "Generating $setting data with noise level $noise_level"
+    for delta in low mid high; do
+        for psi in low mid high; do
+            suffix="$setting-noise-$noise_level/"
+            output_dir="$outdir/$suffix"
+            mkdir -p "$output_dir"
+            Rscript R_files/generate.R $delta $psi $setting $noise_level $nsim $seed "$output_dir"
         done
-    fi
-else
-    echo "Invalid specification. Please provide one of the following: std, fgn, ar2, anisotropic. Run with no arguments to generate all specifications."
-fi
+    done
+done

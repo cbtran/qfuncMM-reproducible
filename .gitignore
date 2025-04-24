@@ -7,49 +7,19 @@ full-run/plots/
 full-run/clipping/
 full-run/data/*
 hcp/
+out/
+data/
 .vscode/
 .lintr
 hcp/*.txt
 hcp/*.zip
-!full-run/rat_coords.rds
 *.rds
+!R_files/rat_coords.rds
 *.job
+**/*.code-workspace
 
 # Prerequisites
 *.d
 *.Rbuildignore
 *.Rhistory
 *.DS_Store
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# R output files
-*.log
