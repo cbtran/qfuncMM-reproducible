@@ -18,17 +18,20 @@ if (!dir.exists(data_spec_dir)) {
   ))
 }
 stage1_dir <- file.path(out_dir, data_spec, "stage1")
+if (cov_setting == "noiseless") {
+  stage1_dir <- paste0(stage1_dir, "_noiseless")
+}
 if (!dir.exists(stage1_dir)) {
   stop(paste("Stage 1 directory", normalizePath(data_dir), "does not exist. Run stage 1 first."))
 }
 out_dir_spec <- file.path(out_dir, data_spec, "stage2")
-if (cov_setting == "noiseless") {
-  out_dir_spec <- file.path(out_dir, paste0(data_spec, "-noiseless"), "stage2")
-}
 if (use_vecchia) {
   out_dir_spec <- paste0(out_dir_spec, "_vecchia")
 } else {
   out_dir_spec <- paste0(out_dir_spec, "_reml")
+}
+if (cov_setting == "noiseless") {
+  out_dir_spec <- paste0(out_dir_spec, "_noiseless")
 }
 dir.create(out_dir_spec, recursive = TRUE, showWarnings = FALSE)
 

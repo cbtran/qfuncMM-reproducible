@@ -30,7 +30,7 @@ if (!dir.exists(out_dir)) {
 data_spec_dir <- file.path(data_dir, data_spec)
 out_spec_dir <- file.path(out_dir, data_spec, "stage1")
 if (cov_setting == "noiseless") {
-  out_spec_dir <- file.path(out_dir, paste0(data_spec, "-noiseless"), "stage1")
+  out_spec_dir <- paste0(out_spec_dir, "_noiseless")
 }
 
 # Check if the directory exists
