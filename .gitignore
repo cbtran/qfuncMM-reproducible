@@ -9,6 +9,7 @@ full-run/data/*
 hcp/
 out/
 data/
+plots/
 .vscode/
 .lintr
 hcp/*.txt
