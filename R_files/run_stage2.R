@@ -9,6 +9,10 @@ out_dir <- args[4]
 use_vecchia <- as.logical(args[5])
 seed <- as.numeric(args[6])
 
+if (!cov_setting %in% c("noiseless", "noisy")) {
+  stop("cov_setting must be either 'noiseless' or 'noisy'")
+}
+
 set.seed(seed)
 data_spec_dir <- file.path(data_dir, data_spec)
 if (!dir.exists(data_spec_dir)) {
@@ -22,7 +26,7 @@ if (cov_setting == "noiseless") {
   stage1_dir <- paste0(stage1_dir, "_noiseless")
 }
 if (!dir.exists(stage1_dir)) {
-  stop(paste("Stage 1 directory", normalizePath(data_dir), "does not exist. Run stage 1 first."))
+  stop(paste("Stage 1 directory", normalizePath(stage1_dir, mustWork = FALSE), "does not exist. Run stage 1 first."))
 }
 out_dir_spec <- file.path(out_dir, data_spec, "stage2")
 if (use_vecchia) {

@@ -3,39 +3,38 @@
 This repository contains R code to reproduce the simulation results in our
 upcoming paper.  An older draft is available [here](https://arxiv.org/abs/2211.02192).
 
-## Generation
+## Install packages
 
-The script to generate simulations is `R_files/generate.R` and should be called
-from the terminal. For example, the following will generate 100
-simulations using a high "delta" and mid "phi" setting with correct specification.
-
-```
-Rscript R_files/generate.R high mid std 100
-```
-
-Available specifictions are `std` and misspecifications `ar2`, `fgn`, `anisotropic`.
-
-## Install package
-
-Our `qfuncMM` package is available on [github](https://github.com/cbtran/qfuncMM), which can be install using `devtools`:
+The file `requirements.R` lists the set of packages that implement our method as well as auxiliary packages used for analysis.
+All dependencies may be installed by running in the terminal
 
 ```
-if (!require("devtools")){
-    install.packages("devtools")
-}
-devtools::install_github("cbtran/qfuncMM")
+> Rscript requirements.R
 ```
 
-## Run
 
-To fit the mixed model, run the script `full-run/full-run.R` after generating the data
-and installing the `qfuncMM` package.
-For example run the following after generating with the above settings:
+## Data generation
+
+The script to generate simulation data is `generate_data.sh`. For example, the following will generate 100 simulated datasets in each setting and save them to the `data/` directory. The total size for all the data is around `400MB`.
 
 ```
-Rscript full-run/full-run.R high mid std 1 100 > high-mid-std.log
+./generate_data.sh data 100
 ```
 
-The above pipes output from the optimization process to a log file.
-Note that running 100 simuations will take quite some time.
-Please see `full-run/full-run.html` for a detailed description of our simulation settings and full simulation results.
+## Run stage 1
+
+First, stage 1 is run on all datasets to estimate the intra-regional parameters for each simulation setting. This can be run with `run_stage1.sh`.
+For example, the following will run the noisy stage 1 model under the correctly specified setting, reading the simulation data from `data/` and outputting the results to `out/`.
+
+```
+./run_stage1.sh std noisy data out
+```
+
+## Run stage 2
+
+After running stage 2, stage 2 can be run with the `run_stage2_*.sh` scripts. To run the ReML model, `run_stage2_reml.sh` is used whereas `run_stage2_vecchia.sh` is used for the Vecchia's approximation.
+For instance, the following will run Vecchia's approximation of stage 2 under the previously mentioned stage 1 setting and save the results in the corresponding subfolder in `out/`.
+
+```
+./run_stage2_vecchia.sh std noisy data out
+```

@@ -1,10 +1,10 @@
 library(ggplot2)
 library(reshape2)
 
+# Example command to run the script:
+# >Rscript create_plots.R out std noisy 1 FALSE plots
+# args <- c("out", "std", "noisy", 1, FALSE, "plots")
 args <- commandArgs(trailingOnly = TRUE)
-args <- c("out", "std", "noisy", 1, FALSE, "plots")
-# RhpcBLASctl::blas_set_num_threads(1)
-# RhpcBLASctl::omp_set_num_threads(10)
 results_dir <- args[1]
 data_spec <- args[2]
 cov_setting <- args[3]
