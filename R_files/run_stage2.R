@@ -8,6 +8,7 @@ data_dir <- args[3]
 out_dir <- args[4]
 use_vecchia <- as.logical(args[5])
 seed <- as.numeric(args[6])
+use_oracle <- ifelse(length(args) >= 7, as.logical(args[7]), FALSE) # Default to FALSE if not provided
 
 if (!cov_setting %in% c("noiseless", "noisy")) {
   stop("cov_setting must be either 'noiseless' or 'noisy'")
@@ -37,6 +38,9 @@ if (use_vecchia) {
 if (cov_setting == "noiseless") {
   out_dir_spec <- paste0(out_dir_spec, "_noiseless")
 }
+if (use_oracle) {
+  out_dir_spec <- paste0(out_dir_spec, "_oracle")
+}
 dir.create(out_dir_spec, recursive = TRUE, showWarnings = FALSE)
 
 voxel_coords <- readRDS(file.path("R_files", "rat_coords.rds"))
@@ -53,6 +57,7 @@ for (delta in c("high", "mid", "low")) {
 
     for (simid in seq_along(data_setting$data)) {
       d <- data_setting$data[[simid]]
+      true_params <- data_setting$setting
       sim_name <- paste0(setting_str, "-", simid)
       s1_outfiles <- list.files(
         stage1_dir,
@@ -84,6 +89,21 @@ for (delta in c("high", "mid", "low")) {
             s1_outfiles[r1_id], s1_outfiles[r2_id],
             out_dir = NULL, data_and_coords = data_and_coords, overwrite = TRUE
           )
+        } else if (use_oracle) {
+          r1_oracle <- as.list(true_params$region_parameters[r1_id, ])
+          r1_oracle$sigma2_ep <- r1_oracle$var_noise
+          j1 <- jsonlite::fromJSON(s1_outfiles[r1_id])
+          j1$coords <- r1_coords
+          j1$data_std <- r1_data_std
+          j1$stage1 <- r1_oracle
+
+          r2_oracle <- as.list(true_params$region_parameters[r2_id, ])
+          r2_oracle$sigma2_ep <- r2_oracle$var_noise
+          j2 <- jsonlite::fromJSON(s1_outfiles[r2_id])
+          j2$coords <- r2_coords
+          j2$data_std <- r2_data_std
+          j2$stage1 <- r2_oracle
+          result <- qfuncMM:::run_stage2(j1, j2, out_dir = NULL, method = "reml", overwrite = TRUE)
         } else {
           result <- qfuncMM::qfuncMM_stage2_reml(
             s1_outfiles[r1_id], s1_outfiles[r2_id],
