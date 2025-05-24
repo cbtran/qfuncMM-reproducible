@@ -1,5 +1,5 @@
 args <- commandArgs(trailingOnly = TRUE)
-# args <- c("std", "noisy", "data", "out", FALSE, 100)
+# args <- c("std", "noisy", "data", "out", FALSE, 100, TRUE)
 # RhpcBLASctl::blas_set_num_threads(1)
 # RhpcBLASctl::omp_set_num_threads(10)
 data_spec <- args[1]
@@ -71,8 +71,10 @@ for (delta in c("high", "mid", "low")) {
         r2_id <- rp[2]
         r1_data <- d[[r1_id]]
         r2_data <- d[[r2_id]]
-        r1_data_std <- (r1_data - mean(r1_data)) / stats::sd(r1_data)
-        r2_data_std <- (r2_data - mean(r2_data)) / stats::sd(r2_data)
+        r1_sd <- stats::sd(r1_data)
+        r2_sd <- stats::sd(r2_data)
+        r1_data_std <- (r1_data - mean(r1_data)) / r1_sd
+        r2_data_std <- (r2_data - mean(r2_data)) / r2_sd
         r1_coords <- voxel_coords[[r1_id]]
         r2_coords <- voxel_coords[[r2_id]]
 
@@ -91,14 +93,14 @@ for (delta in c("high", "mid", "low")) {
           )
         } else if (use_oracle) {
           r1_oracle <- as.list(true_params$region_parameters[r1_id, ])
-          r1_oracle$sigma2_ep <- r1_oracle$var_noise
+          r1_oracle$sigma2_ep <- r1_oracle$var_noise / r1_sd^2
           j1 <- jsonlite::fromJSON(s1_outfiles[r1_id])
           j1$coords <- r1_coords
           j1$data_std <- r1_data_std
           j1$stage1 <- r1_oracle
 
           r2_oracle <- as.list(true_params$region_parameters[r2_id, ])
-          r2_oracle$sigma2_ep <- r2_oracle$var_noise
+          r2_oracle$sigma2_ep <- r2_oracle$var_noise / r2_sd^2
           j2 <- jsonlite::fromJSON(s1_outfiles[r2_id])
           j2$coords <- r2_coords
           j2$data_std <- r2_data_std
