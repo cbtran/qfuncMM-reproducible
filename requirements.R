@@ -29,5 +29,5 @@ if (!"GpGpQFuncMM" %in% installed) {
 }
 
 if (!"qfuncMM" %in% installed) {
-  remotes::install_github("cbtran/qfuncMM@dev")
+  remotes::install_github("cbtran/qfuncMM")
 }
