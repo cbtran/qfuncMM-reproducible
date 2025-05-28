@@ -1,5 +1,8 @@
 library(ggplot2)
 library(reshape2)
+library(dplyr)
+library(tibble)
+library(ggthemes)
 
 # Example command to run the script:
 # >Rscript create_plots.R out std noisy 1 FALSE plots
@@ -80,9 +83,12 @@ p <- ggplot(ggdf) +
       psi = function(x) paste0("\u03C8: ", x)
     )
   ) +
-  theme_bw() +
-  labs(x = "Region pair", y = "\u03C1") +
-  ggtitle(title)
+  theme_few() +
+  scale_fill_brewer(palette = "Set2") +
+  labs(x = "Region pair", y = "\u03C1")
+# ggtitle(title)
+p
+
 
 dir.create(plots_dir, showWarnings = FALSE)
 
