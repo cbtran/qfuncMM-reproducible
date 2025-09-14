@@ -3,11 +3,8 @@ library(reshape2)
 library(dplyr)
 library(tibble)
 library(ggthemes)
+library(tidyr)
 
-# Example command to run the script:
-# >Rscript create_plots.R out std noisy 1 FALSE plots
-# args <- c("out", "std", "noisy", 1, FALSE, "plots")
-args <- commandArgs(trailingOnly = TRUE)
 args <- c("out", "plots")
 results_dir <- args[1]
 plots_dir <- args[2]
@@ -82,6 +79,7 @@ ggdf$yintercept <- ifelse(ggdf$pair == "r12", 0.1, ifelse(ggdf$pair == "r13", 0.
 ggdf$delta <- forcats::fct_relevel(ggdf$delta, "low", "mid", "high")
 ggdf$psi <- forcats::fct_relevel(ggdf$psi, "low", "mid", "high")
 
+ggthemr::ggthemr("fresh")
 p <- ggplot(ggdf) +
   geom_boxplot(mapping = aes(x = pair, y = value, fill = method)) +
   geom_segment(
@@ -100,13 +98,107 @@ p <- ggplot(ggdf) +
       psi = function(x) paste0("\u03C8: ", x)
     )
   ) +
-  theme_few() +
   scale_fill_brewer(palette = "Set2") +
   labs(x = "Region pair", y = "\u03C1") +
-  theme(legend.position = "bottom", legend.title = element_blank())
+  theme(
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
+  )
 p
 
-ggsave(file.path(plots_dir, "compare_vecchia.png"),
-  p,
-  width = 10, height = 7, dpi = 300
-)
+# ggsave(file.path(plots_dir, "compare_vecchia.pdf"),
+#   p,
+#   width = 10, height = 7, dpi = 300, device = cairo_pdf
+# )
+
+# Generate LaTeX table for ReML and Vecchia methods
+ggdf_tbl <- ggdf |>
+  group_by(delta, psi, method, pair) |>
+  summarize(
+    mse = mean((value - yintercept)^2),
+    mse_sd = sd((value - yintercept)^2),
+    mad = mean(abs(value - yintercept)),
+    mad_sd = sd(abs(value - yintercept)),
+  )
+
+cat("\\begin{tabular}{|c|c|cc|cc|}\n")
+cat("\\hline\n")
+cat("\\multirow{2}{*}{$\\rho$} & \\multirow{2}{*}{Method} & \\multicolumn{2}{c|}{$\\psi = 0.2$} & \\multicolumn{2}{c|}{$\\psi = 0.8$} \\\\ \n")
+cat("\\cline{3-6}\n")
+cat(" & & MSE & MAD & MSE & MAD \\\\ \n")
+cat("\\hline\n")
+
+fmt <- function(mean, sd) sprintf("%.3f (%.3f)", mean, sd)
+
+wide_data <- ggdf_tbl %>%
+  filter(delta %in% c("low", "high"), psi %in% c("mid")) %>%
+  mutate(
+    pair = ifelse(pair == "r12", "0.1", ifelse(pair == "r13", "0.35", "0.6")),
+  ) %>%
+  select(pair, method, psi, mse, mse_sd, mad, mad_sd) %>%
+  pivot_wider(
+    id_cols = c(pair, method),
+    names_from = delta, # psi
+    values_from = c(mse, mse_sd, mad, mad_sd),
+    names_sep = "_"
+  )
+
+unique_pairs <- unique(wide_data$pair)
+for (i in seq_along(unique_pairs)) {
+  current_pair <- unique_pairs[i]
+  pair_rows <- wide_data %>% filter(pair == current_pair)
+
+  min_mse_low <- min(pair_rows$mse_low, na.rm = TRUE)
+  min_mad_low <- min(pair_rows$mad_low, na.rm = TRUE)
+  min_mse_high <- min(pair_rows$mse_high, na.rm = TRUE)
+  min_mad_high <- min(pair_rows$mad_high, na.rm = TRUE)
+
+  first_row_in_pair <- TRUE
+
+  for (j in seq_len(nrow(pair_rows))) {
+    row <- pair_rows[j, ]
+
+    pair_str <- if (first_row_in_pair) {
+      paste0("\\multirow{", nrow(pair_rows), "}{*}{", current_pair, "}")
+    } else {
+      ""
+    }
+
+    method_str <- as.character(row$method)
+
+    mse_low_str <- fmt(row$mse_low, row$mse_sd_low)
+    if (row$mse_low == min_mse_low) {
+      mse_low_str <- paste0("\\textbf{", mse_low_str, "}")
+    }
+
+    mad_low_str <- fmt(row$mad_low, row$mad_sd_low)
+    if (row$mad_low == min_mad_low) {
+      mad_low_str <- paste0("\\textbf{", mad_low_str, "}")
+    }
+
+    mse_high_str <- fmt(row$mse_high, row$mse_sd_high)
+    if (row$mse_high == min_mse_high) {
+      mse_high_str <- paste0("\\textbf{", mse_high_str, "}")
+    }
+
+    mad_high_str <- fmt(row$mad_high, row$mad_sd_high)
+    if (row$mad_high == min_mad_high) {
+      mad_high_str <- paste0("\\textbf{", mad_high_str, "}")
+    }
+
+    cat(paste(
+      pair_str, method_str, mse_low_str, mad_low_str, mse_high_str, mad_high_str,
+      sep = " & "
+    ), "\\\\\n")
+
+    first_row_in_pair <- FALSE
+  }
+
+  if (i < length(unique_pairs)) {
+    cat("\\cline{2-6}\n")
+  }
+}
+
+cat("\\hline\n")
+cat("\\end{tabular}\n")

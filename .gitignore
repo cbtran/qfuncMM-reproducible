@@ -10,6 +10,7 @@ hcp/
 out/
 data/
 plots/
+presentation/
 .vscode/
 .lintr
 hcp/*.txt

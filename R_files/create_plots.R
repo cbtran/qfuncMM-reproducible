@@ -2,7 +2,8 @@ library(ggplot2)
 library(reshape2)
 library(dplyr)
 library(tibble)
-library(ggthemes)
+# library(ggthemes)
+ggthemr::ggthemr("fresh")
 
 # Example command to run the script:
 # >Rscript create_plots.R out std noisy 1 FALSE plots
@@ -11,12 +12,15 @@ args <- commandArgs(trailingOnly = TRUE)
 results_dir <- args[1]
 data_spec <- args[2]
 cov_setting <- args[3]
-noise_level <- as.numeric(args[4])
+noise_level <- args[4]
 use_vecchia <- as.logical(args[5])
 plots_dir <- args[6]
 
 # Construct the directory path
 stage2_dir <- ifelse(use_vecchia, "stage2_vecchia", "stage2_reml")
+if (noise_level != "1") {
+  data_spec <- paste0(data_spec, "-noise-", noise_level)
+}
 if (cov_setting == "noiseless") {
   stage2_dir <- paste0(stage2_dir, "_noiseless")
 }
@@ -82,16 +86,23 @@ p <- ggplot(ggdf) +
       psi = function(x) paste0("\u03C8: ", x)
     )
   ) +
-  theme_few() +
+  # theme_few() +
   scale_fill_brewer(palette = "Set2") +
   labs(x = "Region pair", y = "\u03C1") +
-  theme(legend.position = "bottom", legend.title = element_blank())
+  theme(
+    legend.position = "bottom", legend.title = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
+  )
 # ggtitle(title)
-p
+# p
 
 
 dir.create(plots_dir, showWarnings = FALSE)
 
-ggsave(file.path(plots_dir, paste0(data_spec, ".png")), p,
-  width = 10, height = 7, dpi = 300
-)
+outfile <- file.path(plots_dir, paste0(data_spec, ".pdf"))
+if (cov_setting == "noiseless") {
+  outfile <- file.path(plots_dir, paste0(data_spec, "-noiseless.pdf"))
+}
+cairo_pdf(outfile, width = 10, height = 7, onefile = TRUE)
+print(p)
+dev.off()

@@ -1,24 +1,16 @@
 library(ggplot2)
 library(reshape2)
 library(dplyr)
+library(tidyr)
 library(tibble)
 library(ggthemes)
 
-# Example command to run the script:
-# >Rscript create_plots.R out std noisy 1 FALSE plots
-# args <- c("out", "std", "noisy", 1, FALSE, "plots")
-args <- commandArgs(trailingOnly = TRUE)
 args <- c("out", "plots")
 results_dir <- args[1]
-# data_spec <- args[2]
-# cov_setting <- args[3]
-# noise_level <- as.numeric(args[4])
-# use_vecchia <- as.logical(args[5])
 plots_dir <- args[2]
 
 # Construct the directory path
 stage2_dir <- c(file.path("std", "stage2_reml"), file.path("std", "stage2_reml_oracle"))
-# dir_path <- file.path(results_dir, data_spec, stage2_dir)
 
 # List all CSV files in the directory that match the cov_setting
 csv_pattern <- paste0("results_.*\\.csv$")
@@ -91,7 +83,10 @@ ggdf$delta <- forcats::fct_relevel(ggdf$delta, "low", "mid", "high")
 ggdf$psi <- forcats::fct_relevel(ggdf$psi, "low", "mid", "high")
 
 # title <- sprintf("data spec: %s, noise level: %s", data_spec, noise_level)
-p <- ggplot(ggdf) +
+ggthemr::ggthemr("fresh")
+p <- ggdf |>
+  filter(method != "oracle") |>
+  ggplot() +
   geom_boxplot(mapping = aes(x = pair, y = value, fill = method)) +
   geom_segment(
     aes(
@@ -109,14 +104,158 @@ p <- ggplot(ggdf) +
       psi = function(x) paste0("\u03C8: ", x)
     )
   ) +
-  theme_few() +
   scale_fill_brewer(palette = "Set2") +
   labs(x = "Region pair", y = "\u03C1") +
-  theme(legend.position = "bottom", legend.title = element_blank())
+  theme(
+    legend.position = "bottom", legend.title = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
+  )
 # ggtitle(title)
-p
+cairo_pdf(file.path(plots_dir, "correctly_specified.pdf"), width = 10, height = 7, onefile = TRUE)
+print(p)
+dev.off()
 
-ggsave(file.path(plots_dir, "main_results.png"),
-  p,
-  width = 10, height = 7, dpi = 300
-)
+p2 <- ggdf |>
+  filter(method %in% c("ReML", "oracle")) |>
+  ggplot() +
+  geom_boxplot(mapping = aes(x = pair, y = value, fill = method)) +
+  geom_segment(
+    aes(
+      x = as.numeric(pair) - 0.5,
+      xend = as.numeric(pair) + 0.5,
+      y = yintercept,
+      yend = yintercept
+    ),
+    lty = 2
+  ) +
+  ylim(-1, 1) +
+  facet_grid(delta ~ psi,
+    labeller = labeller(
+      delta = function(x) paste0("\u03B4: ", x),
+      psi = function(x) paste0("\u03C8: ", x)
+    )
+  ) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(x = "Region pair", y = "\u03C1") +
+  theme(
+    legend.position = "bottom", legend.title = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
+  )
+# ggtitle(title)
+cairo_pdf(file.path(plots_dir, "compare_oracle.pdf"), width = 10, height = 7, onefile = TRUE)
+print(p2)
+dev.off()
+
+
+ggdf_tbl <- ggdf |>
+  group_by(delta, psi, method, pair) |>
+  summarize(
+    mse = mean((value - yintercept)^2),
+    mse_sd = sd((value - yintercept)^2),
+    mad = mean(abs(value - yintercept)),
+    mad_sd = sd(abs(value - yintercept)),
+  )
+
+
+## Genearte LaTeX table
+cat(r"(\begin{tabular}{|c|c|c|ccc|})", "\n")
+cat(r"(\hline)", "\n")
+cat(r"(Signal & Spatial covariance & $\rho_\text{True}$ & Type & MSE & MAD \\ )", "\n")
+cat(r"(\hline)", "\n")
+
+# 1. Filter and reshape the data (same as before)
+wide_data <- ggdf_tbl %>%
+  filter(delta == "mid", psi %in% c("low", "high"), method != "oracle") %>%
+  mutate(
+    pair = ifelse(pair == "r12", "0.1", ifelse(pair == "r13", "0.35", "0.6")),
+  ) %>%
+  select(pair, method, psi, mse, mse_sd, mad, mad_sd) %>%
+  pivot_wider(
+    id_cols = c(pair, method),
+    names_from = psi,
+    values_from = c(mse, mse_sd, mad, mad_sd),
+    names_sep = "_"
+  )
+
+# 2. Start LaTeX table and create the multi-level header (same as before)
+cat("\\begin{tabular}{|c|c|cc|cc|}\n")
+cat("\\hline\n")
+cat("\\multirow{2}{*}{$\\rho$} & \\multirow{2}{*}{Method} & \\multicolumn{2}{c|}{$\\psi = 0.2$} & \\multicolumn{2}{c|}{$\\psi = 0.8$} \\\\\n")
+cat("\\cline{3-6}\n")
+cat(" & & MSE & MAD & MSE & MAD \\\\\n")
+cat("\\hline\n")
+
+
+# 3. Helper function to format the mean (sd) strings (same as before)
+fmt <- function(mean, sd) sprintf("%.3f (%.3f)", mean, sd)
+
+
+# 4. Loop through the reshaped data to generate table rows
+unique_pairs <- unique(wide_data$pair)
+for (i in seq_along(unique_pairs)) {
+  current_pair <- unique_pairs[i]
+  pair_rows <- wide_data %>% filter(pair == current_pair)
+
+  # --- NEW: Find the minimum MSE and MAD for this pair group ---
+  min_mse_low <- min(pair_rows$mse_low, na.rm = TRUE)
+  min_mad_low <- min(pair_rows$mad_low, na.rm = TRUE)
+  min_mse_high <- min(pair_rows$mse_high, na.rm = TRUE)
+  min_mad_high <- min(pair_rows$mad_high, na.rm = TRUE)
+  # ---
+
+  first_row_in_pair <- TRUE
+
+  for (j in seq_len(nrow(pair_rows))) {
+    row <- pair_rows[j, ]
+
+    pair_str <- if (first_row_in_pair) {
+      paste0("\\multirow{", nrow(pair_rows), "}{*}{", current_pair, "}")
+    } else {
+      ""
+    }
+
+    method_str <- as.character(row$method)
+
+    # MSE Low
+    mse_low_str <- fmt(row$mse_low, row$mse_sd_low)
+    if (row$mse_low == min_mse_low) {
+      mse_low_str <- paste0("\\textbf{", mse_low_str, "}")
+    }
+
+    # MAD Low
+    mad_low_str <- fmt(row$mad_low, row$mad_sd_low)
+    if (row$mad_low == min_mad_low) {
+      mad_low_str <- paste0("\\textbf{", mad_low_str, "}")
+    }
+
+    # MSE High
+    mse_high_str <- fmt(row$mse_high, row$mse_sd_high)
+    if (row$mse_high == min_mse_high) {
+      mse_high_str <- paste0("\\textbf{", mse_high_str, "}")
+    }
+
+    # MAD High
+    mad_high_str <- fmt(row$mad_high, row$mad_sd_high)
+    if (row$mad_high == min_mad_high) {
+      mad_high_str <- paste0("\\textbf{", mad_high_str, "}")
+    }
+    # ---
+
+    # Combine all parts into a single LaTeX table row (same as before)
+    cat(paste(
+      pair_str, method_str, mse_low_str, mad_low_str, mse_high_str, mad_high_str,
+      sep = " & "
+    ), "\\\\\n")
+
+    first_row_in_pair <- FALSE
+  }
+
+  # Add a partial line to separate pair groups (same as before)
+  if (i < length(unique_pairs)) {
+    cat("\\cline{2-6}\n")
+  }
+}
+
+# 5. Add the final line and end the table (same as before)
+cat("\\hline\n")
+cat("\\end{tabular}\n")
