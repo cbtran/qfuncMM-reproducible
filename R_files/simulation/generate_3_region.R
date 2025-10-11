@@ -1,4 +1,4 @@
-source("R_files/covariances.R")
+source("R_files/simulation/covariances.R")
 
 #' Simulate signals from 3 regions using the new model
 #'

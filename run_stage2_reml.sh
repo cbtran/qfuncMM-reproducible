@@ -20,4 +20,4 @@ if [ -z "$data_spec" ] || [ -z "$cov_setting" ] || [ -z "$data_dir" ] || [ -z "$
   exit 1
 fi
 
-Rscript R_files/run_stage2.R "$data_spec" "$cov_setting" "$data_dir" "$out_dir" FALSE 100 "$oracle"
+Rscript R_files/simulation/run_stage2.R "$data_spec" "$cov_setting" "$data_dir" "$out_dir" FALSE 100 "$oracle"

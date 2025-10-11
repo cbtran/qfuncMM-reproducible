@@ -7,8 +7,8 @@
 # <nsim> is the number of simulations to generate,
 # <seed> is an integer seed for random number generation.
 
-source("R_files/generate_3_region.R")
-source("R_files/spatial-anisotropic.R")
+source("R_files/simulation/generate_3_region.R")
+source("R_files/simulation/spatial-anisotropic.R")
 
 # Expect argument such as "mid mid std"
 args <- commandArgs(trailingOnly = TRUE)
@@ -55,7 +55,7 @@ kEta_seq <- sapply(delta_seq, function(y) {
   uniroot(function(x) delta_fn(x) - y, interval = c(0, 20))$root
 })
 
-voxel_coords <- readRDS(file.path("R_files", "rat_coords.rds"))
+voxel_coords <- readRDS(file.path("R_files", "simulation", "rat_coords.rds"))
 sqrd_dist <- lapply(voxel_coords, \(coords) as.matrix(dist(coords))^2)
 
 psi_fn <- function(phi, dist_sqrd) {

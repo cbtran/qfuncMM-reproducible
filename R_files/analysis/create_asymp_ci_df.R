@@ -11,7 +11,7 @@ coverage_results <- tibble()
 s1_dir <- file.path("out", "std", "stage1")
 s2_dir_reml <- file.path("out", "std", "stage2_reml")
 s2_dir_vecchia <- file.path("out", "std", "stage2_vecchia")
-coords <- readRDS("R_files/rat_coords.rds")
+coords <- readRDS("R_files/simulation/rat_coords.rds")
 
 get_asymp_ci_rho_ca <- function(rho_ca, level, adjustment = 1) {
   z_rho_ca <- atanh(rho_ca)

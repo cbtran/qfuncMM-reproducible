@@ -16,7 +16,7 @@ presentation/
 hcp/*.txt
 hcp/*.zip
 *.rds
-!R_files/rat_coords.rds
+!R_files/simulation/rat_coords.rds
 *.job
 **/*.code-workspace
 

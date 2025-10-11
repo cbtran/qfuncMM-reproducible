@@ -43,7 +43,7 @@ if (!dir.exists(data_spec_dir)) {
 
 dir.create(out_spec_dir, recursive = TRUE, showWarnings = FALSE)
 
-voxel_coords <- readRDS(file.path("R_files", "rat_coords.rds"))
+voxel_coords <- readRDS(file.path("R_files", "simulation", "rat_coords.rds"))
 
 for (delta in c("high", "mid", "low")) {
   for (psi in c("high", "mid", "low")) {

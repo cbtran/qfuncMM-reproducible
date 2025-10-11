@@ -1,4 +1,4 @@
-source("R_files/covariances.R")
+source("R_files/simulation/covariances.R")
 
 split_voxels <- function(coords, direction) {
   # Extract the column corresponding to the direction

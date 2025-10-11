@@ -23,7 +23,7 @@ for setting in "${specs[@]}"; do
             suffix="$setting/"
             output_dir="$outdir/$suffix"
             mkdir -p "$output_dir"
-            Rscript R_files/generate.R $delta $psi $setting $noise_level $nsim $seed "$output_dir"
+            Rscript R_files/simulation/generate.R $delta $psi $setting $noise_level $nsim $seed "$output_dir"
         done
     done
 done
@@ -37,7 +37,7 @@ for noise_level in "${noise_levels[@]}"; do
             suffix="$setting-noise-$noise_level/"
             output_dir="$outdir/$suffix"
             mkdir -p "$output_dir"
-            Rscript R_files/generate.R $delta $psi $setting $noise_level $nsim $seed "$output_dir"
+            Rscript R_files/simulation/generate.R $delta $psi $setting $noise_level $nsim $seed "$output_dir"
         done
     done
 done

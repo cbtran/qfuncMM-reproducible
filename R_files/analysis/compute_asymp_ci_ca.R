@@ -11,7 +11,7 @@ s2_run_str <- args[3]
 s1_dir <- file.path(outdir, dataspec, "stage1")
 s2_dir <- file.path(outdir, dataspec, s2_run_str)
 
-coords <- readRDS("R_files/rat_coords.rds")
+coords <- readRDS("R_files/simulation/rat_coords.rds")
 for (delta in c("high", "mid", "low")) {
   for (psi in c("high", "mid", "low")) {
     message(sprintf("Computing CA asymptotic confidence intervals for delta = %s, psi = %s", delta, psi))
