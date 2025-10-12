@@ -25,6 +25,11 @@ if (!"remotes" %in% installed) {
 }
 
 if (!"GpGpQFuncMM" %in% installed) {
+  # Note: This package requires gfortran/Fortran compiler to be installed
+  # On macOS with Homebrew: brew install gfortran
+  # On Ubuntu/Debian: sudo apt-get install gfortran
+  # On Windows: Install Rtools which includes gfortran
+  # A custom Makevars file at ~/.R/Makevars may be needed for proper linking
   remotes::install_github("roobnloo/GpGp-qfuncMM")
 }
 

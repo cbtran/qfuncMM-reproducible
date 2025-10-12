@@ -16,6 +16,7 @@ All dependencies may be installed by running in the terminal
 ## Data generation
 
 The script to generate simulation data is `generate_data.sh`. For example, the following will generate 100 simulated datasets in each setting and save them to the `data/` directory. The total size for all the data is around `400MB`.
+For additional simulations (misspecified setting and varying noise levels), run `generate_additional_data.sh`.
 
 ```
 ./generate_data.sh data 100
