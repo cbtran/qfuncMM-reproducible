@@ -1,7 +1,6 @@
 # Reproduce qfuncMM simulation results
 
-This repository contains R code to reproduce the simulation results in our
-upcoming paper.  An older draft is available [here](https://arxiv.org/abs/2211.02192).
+This repository contains R code to reproduce the simulation results in [A Mixed Model Approach for Estimating Regional Functional Connectivity from Voxel-level BOLD Signals](https://arxiv.org/abs/2211.02192).
 
 ## Generation
 
