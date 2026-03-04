@@ -16,7 +16,8 @@ delta_name <- args[1]
 psi_name <- args[2]
 covar_setting <- args[3]
 message(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
-stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "nonsep"))
+stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "nonsep",
+  "nonsep_matern"))
 noise_level_str <- args[4]
 noise_level <- as.numeric(noise_level_str)
 n_sim <- as.numeric(args[5])
@@ -62,8 +63,15 @@ sqrd_dist <- lapply(voxel_coords, \(coords) as.matrix(dist(coords))^2)
 # C(h; 0 | a, b, 1) = exp(-b^2 ||h||^2), which is RBF with rate b.
 # For all other settings, use the Matern-5/2 spatial kernel.
 if (covar_setting == "nonsep") {
+  # C(h; 0 | a, b, 1) = exp(-b^2 * ||h||^2): RBF with rate b
   psi_fn <- function(phi, dist_sqrd) {
     mean(get_cor_mat("rbf", dist_sqrd, phi))
+  }
+} else if (covar_setting == "nonsep_matern") {
+  # Spatial marginal at u=0: Matern-5/2 with rate phi/sqrt(5)
+  # (since C(h;0) = (1+phi*h+(phi*h)^2/3)*exp(-phi*h) = matern_5_2(h|phi/sqrt(5)))
+  psi_fn <- function(phi, dist_sqrd) {
+    mean(get_cor_mat("matern_5_2", dist_sqrd, phi / sqrt(5)))
   }
 } else {
   psi_fn <- function(phi, dist_sqrd) {
@@ -177,6 +185,29 @@ three_region <- switch(covar_setting,
       LM <- nrow(coords) * n_timept
       params_row$k_gamma *
         nonsep_cov(distsqrd, timesqrd_mat, nonsep_a, params_row$phi_gamma) +
+        params_row$nugget_gamma * diag(LM)
+    }
+    generate_3_region(
+      n_sim, voxel_coords, n_timept, corr_true,
+      region_parameters, shared_parameters,
+      gamma_covar_fn = gamma_covar_fn,
+      seed = seed
+    )
+  },
+  "nonsep_matern" = {
+    # Ip & Li (2017) eq. 1.5, nu=5/2, d=3.
+    # Closed form: exp(-sqrt(alpha^2 * ||h||^2 + beta^2 * u^2))
+    # alpha = phi_gamma (tuned via psi using Matern-1/2 marginal at u=0).
+    # beta = 0.5 (fixed temporal rate, analogous to tau_gamma in std).
+    nonsep_matern_beta <- 0.5
+    gamma_covar_fn <- function(coords, n_timept, params_row, timesqrd_mat) {
+      distsqrd <- as.matrix(dist(coords))^2
+      LM <- nrow(coords) * n_timept
+      params_row$k_gamma *
+        nonsep_matern_cov(
+          distsqrd, timesqrd_mat,
+          params_row$phi_gamma, nonsep_matern_beta
+        ) +
         params_row$nugget_gamma * diag(LM)
     }
     generate_3_region(
