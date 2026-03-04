@@ -16,7 +16,7 @@ delta_name <- args[1]
 psi_name <- args[2]
 covar_setting <- args[3]
 message(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
-stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic"))
+stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "nonsep"))
 noise_level_str <- args[4]
 noise_level <- as.numeric(noise_level_str)
 n_sim <- as.numeric(args[5])
@@ -58,8 +58,17 @@ kEta_seq <- sapply(delta_seq, function(y) {
 voxel_coords <- readRDS(file.path("R_files", "simulation", "rat_coords.rds"))
 sqrd_dist <- lapply(voxel_coords, \(coords) as.matrix(dist(coords))^2)
 
-psi_fn <- function(phi, dist_sqrd) {
-  mean(get_cor_mat("matern_5_2", dist_sqrd, phi))
+# For "nonsep", psi is the average spatial correlation at zero temporal lag:
+# C(h; 0 | a, b, 1) = exp(-b^2 ||h||^2), which is RBF with rate b.
+# For all other settings, use the Matern-5/2 spatial kernel.
+if (covar_setting == "nonsep") {
+  psi_fn <- function(phi, dist_sqrd) {
+    mean(get_cor_mat("rbf", dist_sqrd, phi))
+  }
+} else {
+  psi_fn <- function(phi, dist_sqrd) {
+    mean(get_cor_mat("matern_5_2", dist_sqrd, phi))
+  }
 }
 
 psi_seq <- c(0.2, 0.5, 0.8)
@@ -156,6 +165,24 @@ three_region <- switch(covar_setting,
     generate_3_region(
       n_sim, voxel_coords, n_timept, corr_true,
       region_parameters, shared_parameters, spatial,
+      seed = seed
+    )
+  },
+  "nonsep" = {
+    # Non-separability parameter a = 0.5; b = phi_gamma (tuned via psi).
+    # gamma covariance: k_gamma * C(h; u | a=0.5, b) + nugget_gamma * I_{LM}
+    nonsep_a <- 0.5
+    gamma_covar_fn <- function(coords, n_timept, params_row, timesqrd_mat) {
+      distsqrd <- as.matrix(dist(coords))^2
+      LM <- nrow(coords) * n_timept
+      params_row$k_gamma *
+        nonsep_cov(distsqrd, timesqrd_mat, nonsep_a, params_row$phi_gamma) +
+        params_row$nugget_gamma * diag(LM)
+    }
+    generate_3_region(
+      n_sim, voxel_coords, n_timept, corr_true,
+      region_parameters, shared_parameters,
+      gamma_covar_fn = gamma_covar_fn,
       seed = seed
     )
   }

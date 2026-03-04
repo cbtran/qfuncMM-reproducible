@@ -15,7 +15,9 @@ source("R_files/simulation/covariances.R")
 #' @return obs_signal Simulated signal
 generate_3_region <- function(
     num_sim, voxel_coords, n_timept, true_corr, region_params, shared_params,
-    spatial_covar_fn, seed = 1, c_kernel_type = "matern_5_2", covar_spec = c("standard", "diag_time")) {
+    spatial_covar_fn = NULL, seed = 1, c_kernel_type = "matern_5_2",
+    covar_spec = c("standard", "diag_time"),
+    gamma_covar_fn = NULL) {
   covar_spec <- match.arg(covar_spec)
   set.seed(seed + 1000)
 
@@ -46,29 +48,41 @@ generate_3_region <- function(
   k_eta_diag <- diag(sqrt(region_params$k_eta))
   eta_sigma <- kronecker(k_eta_diag %*% corr_mat %*% k_eta_diag, A)
 
-  # Matrices of gamma effects. C is spatial correlation matrix, B is temporal covariance matrix
+  # Matrices of gamma effects. C is spatial, B is temporal covariance matrix
   phi_gamma <- region_params$phi_gamma
   tau_gamma <- region_params$tau_gamma
   k_gamma <- region_params$k_gamma
   nugget_gamma <- region_params$nugget_gamma
 
-  ## Region 1
-  C1 <- spatial_covar_fn(voxel_coords$r1, phi_gamma[1])
-  B1 <- k_gamma[1] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[1]) +
-    nugget_gamma[1] * diag(n_timept)
-  gamma_sigma1 <- kronecker(C1, B1)
+  if (!is.null(gamma_covar_fn)) {
+    gamma_sigma1 <- gamma_covar_fn(
+      voxel_coords$r1, n_timept, region_params[1, ], timesqrd_mat
+    )
+    gamma_sigma2 <- gamma_covar_fn(
+      voxel_coords$r2, n_timept, region_params[2, ], timesqrd_mat
+    )
+    gamma_sigma3 <- gamma_covar_fn(
+      voxel_coords$r3, n_timept, region_params[3, ], timesqrd_mat
+    )
+  } else {
+    ## Region 1
+    C1 <- spatial_covar_fn(voxel_coords$r1, phi_gamma[1])
+    B1 <- k_gamma[1] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[1]) +
+      nugget_gamma[1] * diag(n_timept)
+    gamma_sigma1 <- kronecker(C1, B1)
 
-  ## Region 2
-  C2 <- spatial_covar_fn(voxel_coords$r2, phi_gamma[2])
-  B2 <- k_gamma[2] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[2]) +
-    nugget_gamma[2] * diag(n_timept)
-  gamma_sigma2 <- kronecker(C2, B2)
+    ## Region 2
+    C2 <- spatial_covar_fn(voxel_coords$r2, phi_gamma[2])
+    B2 <- k_gamma[2] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[2]) +
+      nugget_gamma[2] * diag(n_timept)
+    gamma_sigma2 <- kronecker(C2, B2)
 
-  ## Region 3
-  C3 <- spatial_covar_fn(voxel_coords$r3, phi_gamma[3])
-  B3 <- k_gamma[3] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[3]) +
-    nugget_gamma[3] * diag(n_timept)
-  gamma_sigma3 <- kronecker(C3, B3)
+    ## Region 3
+    C3 <- spatial_covar_fn(voxel_coords$r3, phi_gamma[3])
+    B3 <- k_gamma[3] * get_cor_mat("rbf", timesqrd_mat, tau_gamma[3]) +
+      nugget_gamma[3] * diag(n_timept)
+    gamma_sigma3 <- kronecker(C3, B3)
+  }
 
   eta <- MASS::mvrnorm(
     num_sim,

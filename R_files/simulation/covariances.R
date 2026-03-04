@@ -29,3 +29,31 @@ ar2_cov <- function(t, xi) {
   Q <- toeplitz(g / g[0])
   return(Q)
 }
+
+# Non-separable space-time covariance kernel (Gneiting 2002 class, R^3)
+# C(h; u | a, b, c) =
+#   c / (a^2 u^2 + 1)^(3/2) * exp(-b^2 ||h||^2 / (a^2 u^2 + 1))
+# a >= 0: non-separability; a = 0 gives a separable spatial RBF kernel
+# b >= 0: spatial scale (analogous to phi_gamma)
+# c >= 0: overall scale (typically 1; apply k_gamma externally)
+# spatial_distsqrd: L x L matrix of squared spatial distances
+# time_lags_sqrd:   M x M matrix of squared temporal lags
+# Returns the LM x LM joint covariance matrix, ordering (l-1)*M + m
+nonsep_cov <- function(spatial_distsqrd, time_lags_sqrd, a, b, c = 1) {
+  L <- nrow(spatial_distsqrd)
+  M <- nrow(time_lags_sqrd)
+
+  denom <- a^2 * time_lags_sqrd + 1
+
+  result <- matrix(0.0, nrow = L * M, ncol = L * M)
+  row_base <- (seq_len(L) - 1L) * M
+  for (m1 in seq_len(M)) {
+    for (m2 in seq_len(M)) {
+      d <- denom[m1, m2]
+      block <- (c / d^1.5) * exp(-b^2 * spatial_distsqrd / d)
+      result[row_base + m1, row_base + m2] <- block
+    }
+  }
+
+  result
+}

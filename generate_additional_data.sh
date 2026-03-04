@@ -15,7 +15,7 @@ nsim=${2:-100}
 seed=${3:-1234}
 
 # Generate data for other covariance settings (fgn, ar2, anisotropic)
-specs=("fgn" "ar2" "anisotropic")
+specs=("fgn" "ar2" "anisotropic", "nonsep")
 noise_level=1
 for setting in "${specs[@]}"; do
     echo "Generating $setting data with noise level $noise_level"
