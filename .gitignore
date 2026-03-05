@@ -25,3 +25,6 @@ hcp/*.zip
 *.Rbuildignore
 *.Rhistory
 *.DS_Store
+slurm*.out
+submit_stage1_all_pairs.sh
+submit_stage2_all_pairs.sh

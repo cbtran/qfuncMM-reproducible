@@ -1,5 +1,5 @@
 args <- commandArgs(trailingOnly = TRUE)
-# args <- c("std", "noisy", "data", "out", FALSE, 100, TRUE)
+# args <- c("std", "noisy", "data", "out", FALSE, 100, "mid", "mid", TRUE)
 # RhpcBLASctl::blas_set_num_threads(1)
 # RhpcBLASctl::omp_set_num_threads(10)
 data_spec <- args[1]
@@ -8,10 +8,24 @@ data_dir <- args[3]
 out_dir <- args[4]
 use_vecchia <- as.logical(args[5])
 seed <- as.numeric(args[6])
-use_oracle <- ifelse(length(args) >= 7, as.logical(args[7]), FALSE) # Default to FALSE if not provided
+delta_setting <- args[7] # Required argument
+psi_setting <- args[8] # Required argument
+use_oracle <- ifelse(length(args) >= 9, as.logical(args[9]), FALSE) # Default to FALSE if not provided
 
 if (!cov_setting %in% c("noiseless", "noisy")) {
   stop("cov_setting must be either 'noiseless' or 'noisy'")
+}
+
+if (length(args) < 8) {
+  stop("Usage: Rscript run_stage2.R <data_spec> <cov_setting> <data_dir> <out_dir> <use_vecchia> <seed> <delta> <psi> [use_oracle]")
+}
+
+if (!delta_setting %in% c("high", "mid", "low")) {
+  stop("delta_setting must be one of 'high', 'mid', 'low'")
+}
+
+if (!psi_setting %in% c("high", "mid", "low")) {
+  stop("psi_setting must be one of 'high', 'mid', 'low'")
 }
 
 set.seed(seed)
@@ -45,15 +59,15 @@ dir.create(out_dir_spec, recursive = TRUE, showWarnings = FALSE)
 
 voxel_coords <- readRDS(file.path("R_files", "simulation", "rat_coords.rds"))
 
-for (delta in c("high", "mid", "low")) {
-  for (psi in c("high", "mid", "low")) {
-    setting_str <- paste0(delta, "-", psi)
-    data_setting <- readRDS(file.path(data_spec_dir, paste0(setting_str, ".rds")))
-    csv_file <- file.path(out_dir_spec, paste0("results_", setting_str, ".csv"))
-    if (file.exists(csv_file)) {
-      message(paste0("CSV file ", csv_file, " already exists. Skipping."))
-      next
-    }
+# Process only the specified delta and psi combination
+delta <- delta_setting
+psi <- psi_setting
+setting_str <- paste0(delta, "-", psi)
+data_setting <- readRDS(file.path(data_spec_dir, paste0(setting_str, ".rds")))
+csv_file <- file.path(out_dir_spec, paste0("results_", setting_str, ".csv"))
+if (file.exists(csv_file)) {
+  message(paste0("CSV file ", csv_file, " already exists. Skipping."))
+} else {
 
     for (simid in seq_along(data_setting$data)) {
       d <- data_setting$data[[simid]]
@@ -138,4 +152,3 @@ for (delta in c("high", "mid", "low")) {
       }
     }
   }
-}
