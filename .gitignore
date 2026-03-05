@@ -1,49 +1,30 @@
 # Simulation files
-simulation-output/
-rat-data-coords/
 full-run/logs/
 full-run/out/
+full-run/out-oracle/
+full-run/out-eblue/
 full-run/plots/
 full-run/clipping/
 full-run/data/*
+hcp/
+out/
+data/
+plots/
+presentation/
 .vscode/
 .lintr
+hcp/*.txt
+hcp/*.zip
+*.rds
+!R_files/simulation/rat_coords.rds
+*.job
+**/*.code-workspace
 
 # Prerequisites
 *.d
 *.Rbuildignore
 *.Rhistory
 *.DS_Store
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# R output files
-*.log
+slurm*.out
+submit_stage1_all_pairs.sh
+submit_stage2_all_pairs.sh
