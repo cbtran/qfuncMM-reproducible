@@ -18,5 +18,9 @@ if [ -z "$data_spec" ] || [ -z "$cov_setting" ] || [ -z "$data_dir" ] || [ -z "$
   exit 1
 fi
 
-Rscript R_files/simulation/run_stage1.R "$data_spec" "$cov_setting" "$data_dir" "$out_dir" 100
+for delta in high mid low; do
+  for psi in high mid low; do
+    Rscript R_files/simulation/run_stage1.R "$data_spec" "$cov_setting" "$data_dir" "$out_dir" 100 "$delta" "$psi"
+  done
+done
 

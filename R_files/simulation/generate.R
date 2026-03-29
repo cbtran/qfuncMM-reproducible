@@ -16,8 +16,9 @@ delta_name <- args[1]
 psi_name <- args[2]
 covar_setting <- args[3]
 message(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
-stopifnot(covar_setting %in% c("std", "ar2", "fgn", "anisotropic", "nonsep",
-  "nonsep_matern"))
+stopifnot(covar_setting %in% c(
+  "std", "ar2", "fgn", "anisotropic", "nonsep_matern"
+))
 noise_level_str <- args[4]
 noise_level <- as.numeric(noise_level_str)
 n_sim <- as.numeric(args[5])
@@ -116,7 +117,7 @@ region_parameters <- data.frame(
   row.names = c("region1", "region2", "region3")
 )
 shared_parameters <- c(tau_eta = tau_eta, nugget = nugget_eta)
-corr_true <- c(rho12 = 0.1, rho13 = 0.35, rho23 = 0.6)
+corr_true <- c(rho12 = 0, rho13 = 0.35, rho23 = 0.6)
 
 n_timept <- 60
 if (covar_setting %in% c("fgn", "ar2")) {

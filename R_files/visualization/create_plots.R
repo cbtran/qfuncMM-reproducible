@@ -7,8 +7,8 @@ ggthemr::ggthemr("fresh")
 
 # Example command to run the script:
 # >Rscript create_plots.R out std noisy 1 FALSE plots
-# args <- c("out", "std", "noisy", 1, FALSE, "plots")
 args <- commandArgs(trailingOnly = TRUE)
+# args <- c("out", "nonsep", "noisy", 1, FALSE, "plots")
 results_dir <- args[1]
 data_spec <- args[2]
 cov_setting <- args[3]
@@ -93,7 +93,7 @@ p <- ggplot(ggdf) +
     legend.position = "bottom", legend.title = element_blank(),
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
   )
-# ggtitle(title)
+# ggtitle("Nonseparable kernel with exponential and polynomial marginal")
 # p
 
 
