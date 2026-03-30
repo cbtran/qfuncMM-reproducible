@@ -12,10 +12,15 @@ source("R_files/simulation/spatial-anisotropic.R")
 
 # Expect argument such as "mid mid std"
 args <- commandArgs(trailingOnly = TRUE)
+use_hcp_coords <- "--use-hcp-coords" %in% args # Use the large HCP voxel set if specified.
+args <- args[args != "--use-hcp-coords"]
 delta_name <- args[1]
 psi_name <- args[2]
 covar_setting <- args[3]
 message(sprintf("Generating data with %s-%s %s setting...\n", args[1], args[2], covar_setting))
+if (use_hcp_coords) {
+  message("Using HCP voxel coordinates.")
+}
 stopifnot(covar_setting %in% c(
   "std", "ar2", "fgn", "anisotropic", "nonsep_matern"
 ))
@@ -57,7 +62,8 @@ kEta_seq <- sapply(delta_seq, function(y) {
   uniroot(function(x) delta_fn(x) - y, interval = c(0, 20))$root
 })
 
-voxel_coords <- readRDS(file.path("R_files", "simulation", "rat_coords.rds"))
+coords_file <- if (use_hcp_coords) "s111716_coords.rds" else "rat_coords.rds"
+voxel_coords <- readRDS(file.path("R_files", "simulation", coords_file))
 sqrd_dist <- lapply(voxel_coords, \(coords) as.matrix(dist(coords))^2)
 
 # For "nonsep", psi is the average spatial correlation at zero temporal lag:

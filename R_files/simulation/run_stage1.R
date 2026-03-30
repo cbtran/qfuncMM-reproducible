@@ -1,6 +1,6 @@
 # Run this script in the terminal as
 # >Rscript R_files/simulation/run_stage1.R <data_spec> <cov_setting> <data_dir> <out_dir> <seed> <delta> <psi>
-# <data_spec> is one of "std", "fgn", "ar2", "anisotropic", "std-noise-1e-2", "std-noise-1e-3", "std-noise-1e-7",
+# <data_spec> is one of "std", "fgn", "ar2", "anisotropic", "nonsep_matern", "std-noise-1e-2", "std-noise-1e-3", "std-noise-1e-7", "std-hcp"
 # <cov_setting> is one of "noisy", "noiseless", "auto"
 # <data_dir> is the directory containing the data files
 # <out_dir> is the output directory
@@ -47,7 +47,8 @@ if (!dir.exists(data_spec_dir)) {
 
 dir.create(out_spec_dir, recursive = TRUE, showWarnings = FALSE)
 
-voxel_coords <- readRDS(file.path("R_files", "simulation", "rat_coords.rds"))
+coords_file <- if (data_spec == "std-hcp") "s111716_coords.rds" else "rat_coords.rds"
+voxel_coords <- readRDS(file.path("R_files", "simulation", coords_file))
 
 setting_str <- paste0(delta, "-", psi)
 data_setting <- readRDS(file.path(data_spec_dir, paste0(setting_str, ".rds")))

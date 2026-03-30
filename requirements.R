@@ -24,6 +24,10 @@ if (!"remotes" %in% installed) {
   install.packages("remotes", repos = "https://cloud.r-project.org")
 }
 
+if (!"spam" %in% installed) {
+  install.packages("spam", repos = "https://cloud.r-project.org")
+}
+
 if (!"GpGpQFuncMM" %in% installed) {
   # Note: This package requires gfortran/Fortran compiler to be installed
   # On macOS with Homebrew: brew install gfortran
