@@ -57,7 +57,8 @@ if (use_oracle) {
 }
 dir.create(out_dir_spec, recursive = TRUE, showWarnings = FALSE)
 
-voxel_coords <- readRDS(file.path("R_files", "simulation", "rat_coords.rds"))
+coords_file <- if (data_spec == "std-hcp") "s111716_coords.rds" else "rat_coords.rds"
+voxel_coords <- readRDS(file.path("R_files", "simulation", coords_file))
 
 # Process only the specified delta and psi combination
 delta <- delta_setting
@@ -100,6 +101,7 @@ if (file.exists(csv_file)) {
         )
 
         result <- list()
+        t_start <- proc.time()[["elapsed"]]
         if (use_vecchia) {
           result <- qfuncMM::qfuncMM_stage2_vecchia(
             s1_outfiles[r1_id], s1_outfiles[r2_id],
@@ -126,6 +128,7 @@ if (file.exists(csv_file)) {
             out_dir = NULL, data_and_coords = data_and_coords, overwrite = TRUE
           )
         }
+        wall_time <- proc.time()[["elapsed"]] - t_start
         stage2_vec <- unlist(result$stage2, recursive = TRUE, use.names = TRUE)
         stage2_df <- as.data.frame(t(stage2_vec), check.names = FALSE)
         result_row <- cbind(
@@ -138,7 +141,8 @@ if (file.exists(csv_file)) {
             mu2 = result$mu[2],
             stringsAsFactors = FALSE
           ),
-          stage2_df
+          stage2_df,
+          data.frame(wall_time_s = wall_time)
         )
         first_write <- !file.exists(csv_file) || file.info(csv_file)$size == 0
         write.table(

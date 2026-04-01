@@ -3,7 +3,7 @@ export OMP_NUM_THREADS=10
 export MKL_NUM_THREADS=10
 
 # Usage: ./run_stage2_reml.sh <data_spec> <cov_setting> <data_dir> <out_dir> <delta> <psi> [oracle]
-# <data_spec> is one of "std", "fgn", "ar2", "anisotropic", "nonsep", "nonsep_matern", "std-noise-1e-2", "std-noise-1e-3", "std-noise-1e-7",
+# <data_spec> is one of "std", "fgn", "ar2", "anisotropic", "nonsep_matern", "std-noise-1e-2", "std-noise-1e-3", "std-noise-1e-7",
 # <cov_setting> is one of "noisy", "noiseless", "auto"
 # <data_dir> is the directory containing the data files
 # <out_dir> is the output directory
