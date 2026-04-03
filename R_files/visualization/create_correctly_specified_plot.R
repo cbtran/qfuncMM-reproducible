@@ -10,7 +10,7 @@ results_dir <- args[1]
 plots_dir <- args[2]
 
 # Construct the directory path
-stage2_dir <- c(file.path("std", "stage2_reml"), file.path("std", "stage2_reml_oracle"))
+stage2_dir <- c(file.path("std", "stage2_reml"), file.path("std", "stage2_reml_oracle"), file.path("std", "stage2_kang"))
 
 # List all CSV files in the directory that match the cov_setting
 csv_pattern <- paste0("results_.*\\.csv$")
@@ -60,11 +60,36 @@ all_data_oracle <- do.call(rbind, lapply(
   select(simid, region1_uniqid, region2_uniqid, delta, psi, rho_oracle) |>
   as_tibble()
 
+dir_path_kang <- file.path(results_dir, stage2_dir[3])
+csv_files_kang <- list.files(path = dir_path_kang, pattern = csv_pattern, full.names = TRUE)
+sim_level_kang <- sapply(csv_files_kang, function(file) {
+  filename <- basename(file)
+  setting_part <- sub("results_(.*)\\.csv", "\\1", filename)
+  setting_parts <- strsplit(setting_part, "-")[[1]]
+  c(delta = setting_parts[1], psi = setting_parts[2])
+})
+
+all_data_kang <- do.call(rbind, lapply(
+  seq_along(csv_files_kang),
+  \(i) {
+    df <- read.csv(csv_files_kang[i])
+    df$delta <- sim_level_kang["delta", i]
+    df$psi <- sim_level_kang["psi", i]
+    df
+  }
+)) |>
+  select(simid, region1_uniqid, region2_uniqid, delta, psi, rho_kang) |>
+  as_tibble()
+
 all_data <- inner_join(
   all_data,
   all_data_oracle,
   by = c("simid", "region1_uniqid", "region2_uniqid", "delta", "psi")
-)
+) |>
+  inner_join(
+    all_data_kang,
+    by = c("simid", "region1_uniqid", "region2_uniqid", "delta", "psi")
+  )
 
 ggdf <- tidyr::pivot_longer(all_data,
   cols = starts_with("rho"),
@@ -73,12 +98,12 @@ ggdf <- tidyr::pivot_longer(all_data,
 )
 
 ggdf$method <- factor(ggdf$method,
-  levels = c("rho", "rho_oracle", "rho_eblue", "rho_ca"),
-  labels = c("ReML", "oracle", "EBLUE", "CA")
+  levels = c("rho", "rho_oracle", "rho_eblue", "rho_ca", "rho_kang"),
+  labels = c("ReML", "oracle", "EBLUE", "CA", "Kang")
 )
 
 ggdf$pair <- factor(paste0("r", ggdf$region1_uniqid, ggdf$region2_uniqid))
-ggdf$yintercept <- ifelse(ggdf$pair == "r12", 0.1, ifelse(ggdf$pair == "r13", 0.35, 0.6))
+ggdf$yintercept <- ifelse(ggdf$pair == "r12", 0, ifelse(ggdf$pair == "r13", 0.35, 0.6))
 ggdf$delta <- forcats::fct_relevel(ggdf$delta, "low", "mid", "high")
 ggdf$psi <- forcats::fct_relevel(ggdf$psi, "low", "mid", "high")
 
@@ -167,7 +192,7 @@ cat(r"(\hline)", "\n")
 wide_data <- ggdf_tbl %>%
   filter(delta == "mid", psi %in% c("low", "high"), method != "oracle") %>%
   mutate(
-    pair = ifelse(pair == "r12", "0.1", ifelse(pair == "r13", "0.35", "0.6")),
+    pair = ifelse(pair == "r12", "0", ifelse(pair == "r13", "0.35", "0.6")),
   ) %>%
   select(pair, method, psi, mse, mse_sd, mad, mad_sd) %>%
   pivot_wider(

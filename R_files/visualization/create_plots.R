@@ -26,6 +26,11 @@ if (cov_setting == "noiseless") {
 }
 dir_path <- file.path(results_dir, data_spec, stage2_dir)
 
+kang_dir <- file.path(results_dir, data_spec, "stage2_kang")
+if (cov_setting == "noiseless") {
+  kang_dir <- paste0(kang_dir, "_noiseless")
+}
+
 # List all CSV files in the directory that match the cov_setting
 csv_pattern <- paste0("results_.*\\.csv$")
 csv_files <- list.files(path = dir_path, pattern = csv_pattern, full.names = TRUE)
@@ -40,6 +45,13 @@ sim_level <- sapply(csv_files, function(file) {
   c(delta = setting_parts[1], psi = setting_parts[2])
 })
 
+csv_files_kang <- list.files(path = kang_dir, pattern = csv_pattern, full.names = TRUE)
+sim_level_kang <- sapply(csv_files_kang, function(file) {
+  filename <- basename(file)
+  setting_part <- sub("results_(.*)\\.csv", "\\1", filename)
+  setting_parts <- strsplit(setting_part, "-")[[1]]
+  c(delta = setting_parts[1], psi = setting_parts[2])
+})
 
 # Read all CSV files and combine into one data frame
 all_data <- do.call(rbind, lapply(
@@ -51,22 +63,40 @@ all_data <- do.call(rbind, lapply(
     df
   }
 ))
+
+all_data_kang <- do.call(rbind, lapply(
+  seq_along(csv_files_kang),
+  \(i) {
+    df <- read.csv(csv_files_kang[i])
+    df$delta <- sim_level_kang["delta", i]
+    df$psi <- sim_level_kang["psi", i]
+    df
+  }
+)) |>
+  dplyr::select(simid, region1_uniqid, region2_uniqid, delta, psi, rho_kang)
+
+all_data <- dplyr::inner_join(
+  all_data,
+  all_data_kang,
+  by = c("simid", "region1_uniqid", "region2_uniqid", "delta", "psi")
+)
+
 all_data$delta <- forcats::fct_relevel(all_data$delta, "low", "mid", "high")
 all_data$psi <- forcats::fct_relevel(all_data$psi, "low", "mid", "high")
 
 # Convert data from wide to long format for plotting
-id_vars <- setdiff(names(all_data), c("rho", "rho_eblue", "rho_ca"))
+id_vars <- setdiff(names(all_data), c("rho", "rho_eblue", "rho_ca", "rho_kang"))
 ggdf <- tidyr::pivot_longer(all_data,
   cols = -all_of(id_vars),
   names_to = "method",
   values_to = "value"
 )
 ggdf$method <- factor(ggdf$method,
-  levels = c("rho", "rho_eblue", "rho_ca"),
-  labels = c("ReML", "EBLUE", "CA")
+  levels = c("rho", "rho_eblue", "rho_ca", "rho_kang"),
+  labels = c("ReML", "EBLUE", "CA", "Kang")
 )
 ggdf$pair <- factor(paste0("r", ggdf$region1_uniqid, ggdf$region2_uniqid))
-ggdf$yintercept <- ifelse(ggdf$pair == "r12", 0.1, ifelse(ggdf$pair == "r13", 0.35, 0.6))
+ggdf$yintercept <- ifelse(ggdf$pair == "r12", 0, ifelse(ggdf$pair == "r13", 0.35, 0.6))
 
 p <- ggplot(ggdf) +
   geom_boxplot(mapping = aes(x = pair, y = value, fill = method)) +

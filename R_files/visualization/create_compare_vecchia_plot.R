@@ -75,7 +75,7 @@ ggdf$method <- factor(ggdf$method,
 )
 
 ggdf$pair <- factor(paste0("r", ggdf$region1_uniqid, ggdf$region2_uniqid))
-ggdf$yintercept <- ifelse(ggdf$pair == "r12", 0.1, ifelse(ggdf$pair == "r13", 0.35, 0.6))
+ggdf$yintercept <- ifelse(ggdf$pair == "r12", 0, ifelse(ggdf$pair == "r13", 0.35, 0.6))
 ggdf$delta <- forcats::fct_relevel(ggdf$delta, "low", "mid", "high")
 ggdf$psi <- forcats::fct_relevel(ggdf$psi, "low", "mid", "high")
 
@@ -107,10 +107,10 @@ p <- ggplot(ggdf) +
   )
 p
 
-# ggsave(file.path(plots_dir, "compare_vecchia.pdf"),
-#   p,
-#   width = 10, height = 7, dpi = 300, device = cairo_pdf
-# )
+ggsave(file.path(plots_dir, "compare_vecchia.pdf"),
+  p,
+  width = 10, height = 7, dpi = 300, device = cairo_pdf
+)
 
 # Generate LaTeX table for ReML and Vecchia methods
 ggdf_tbl <- ggdf |>
