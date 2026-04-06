@@ -26,18 +26,14 @@ for (delta in c("high", "mid", "low")) {
   for (psi in c("high", "mid", "low")) {
     setting_str <- paste0(delta, "-", psi)
     reml_file <- file.path(results_reml_dir, sprintf("asymp_ci_%s-%s.csv", delta, psi))
-    reml_file_approx <- file.path(results_reml_dir, sprintf("asymp_ci_%s-%s_approx.csv", delta, psi))
     vecchia_file <- file.path(results_vecchia_dir, sprintf("asymp_ci_%s-%s.csv", delta, psi))
-    vecchia_file_approx <- file.path(results_vecchia_dir, sprintf("asymp_ci_%s-%s_diag.csv", delta, psi))
 
     if (!file.exists(reml_file) || !file.exists(vecchia_file)) {
       next
     }
 
     reml_data <- read_csv(reml_file, col_types = "iii", show_col_types = FALSE)
-    reml_data_approx <- read_csv(reml_file_approx, col_types = "iii", show_col_types = FALSE)
     vecchia_data <- read_csv(vecchia_file, col_types = "iii", show_col_types = FALSE)
-    vecchia_data_approx <- read_csv(vecchia_file_approx, col_types = "iii", show_col_types = FALSE)
     stage2_out_reml <- read_csv(file.path(s2_dir_reml, sprintf("results_%s.csv", setting_str)), col_types = "iii")
     stage2_out_vecchia <- read_csv(file.path(s2_dir_vecchia, sprintf("results_%s.csv", setting_str)), col_types = "iii")
 
@@ -106,19 +102,9 @@ for (delta in c("high", "mid", "low")) {
           theta_reml, level, asympvar_rho
         )
       })
-      ci_reml_approx <- sapply(levels, \(level) {
-        qfuncMM::get_asymp_ci_rho(
-          theta_reml, level, as.numeric(reml_data_approx[id, "asymp_var_rho"])
-        )
-      })
       ci_vecchia <- sapply(levels, \(level) {
         qfuncMM::get_asymp_ci_rho(
           theta_vecchia, level, as.numeric(vecchia_data[id, "asymp_var_rho"])
-        )
-      })
-      ci_vecchia_approx <- sapply(levels, \(level) {
-        qfuncMM::get_asymp_ci_rho(
-          theta_vecchia, level, as.numeric(vecchia_data_approx[id, "asymp_var_rho"])
         )
       })
       ci_ca <- sapply(levels, \(level) {
@@ -144,27 +130,11 @@ for (delta in c("high", "mid", "low")) {
         )
         idx <- idx + 1
 
-        # REML Approx
-        sim_data[[idx]] <- list(
-          delta = delta, psi = psi, simid = id, level = level, method = "reml_approx",
-          lower = ci_reml_approx[1, i], upper = ci_reml_approx[2, i], rho_true = rho_true_val,
-          covered = ci_reml_approx[1, i] <= rho_true_val && ci_reml_approx[2, i] >= rho_true_val
-        )
-        idx <- idx + 1
-
         # Vecchia
         sim_data[[idx]] <- list(
           delta = delta, psi = psi, simid = id, level = level, method = "vecchia",
           lower = ci_vecchia[1, i], upper = ci_vecchia[2, i], rho_true = rho_true_val,
           covered = ci_vecchia[1, i] <= rho_true_val && ci_vecchia[2, i] >= rho_true_val
-        )
-        idx <- idx + 1
-
-        # Vecchia Approx
-        sim_data[[idx]] <- list(
-          delta = delta, psi = psi, simid = id, level = level, method = "vecchia_approx",
-          lower = ci_vecchia_approx[1, i], upper = ci_vecchia_approx[2, i], rho_true = rho_true_val,
-          covered = ci_vecchia_approx[1, i] <= rho_true_val && ci_vecchia_approx[2, i] >= rho_true_val
         )
         idx <- idx + 1
 
@@ -224,4 +194,4 @@ for (delta in c("high", "mid", "low")) {
   }
 }
 coverage_results_df <- bind_rows(coverage_results_list)
-# write_csv(coverage_results_df, "out/std/asymp_ci_coverage_detailed.csv")
+write_csv(coverage_results_df, "out/std/asymp_ci_coverage_detailed.csv")

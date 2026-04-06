@@ -202,9 +202,9 @@ three_region <- switch(covar_setting,
     )
   },
   "nonsep_matern" = {
-    # Ip & Li (2017) eq. 1.5, nu=5/2, d=3.
+    # Ip & Li (2017) eq. 1.5, nu=9/2, d=3.
     # Closed form: exp(-sqrt(alpha^2 * ||h||^2 + beta^2 * u^2))
-    # alpha = phi_gamma (tuned via psi using Matern-1/2 marginal at u=0).
+    # alpha = phi_gamma (tuned via psi using Matern-5/2 marginal at u=0).
     # beta = 0.5 (fixed temporal rate, analogous to tau_gamma in std).
     nonsep_matern_beta <- 0.5
     gamma_covar_fn <- function(coords, n_timept, params_row, timesqrd_mat) {

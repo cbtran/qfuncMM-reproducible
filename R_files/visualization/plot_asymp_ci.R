@@ -442,3 +442,62 @@ combined_plot_3m <- combined_plot_3m +
 
 combined_plot_3m
 ggsave("plots/asymp_ci_coverage_2x2_facet_3methods.pdf", combined_plot_3m, width = 10, height = 8, device = cairo_pdf)
+
+
+p_reml_95 <- coverage_results |>
+  # Filter for ReML method and 95% confidence level
+  filter(method == "reml", abs(as.numeric(as.character(level)) - 0.95) < 1e-5) |>
+  mutate(
+    setting = factor(paste(delta, psi, sep = "-")),
+    pair = forcats::fct_recode(factor(rho_true), "r12" = "0", "r13" = "0.35", "r23" = "0.6")
+  ) |>
+  group_by(delta, psi, pair) |>
+  summarize(
+    coverage = mean(covered, na.rm = TRUE),
+    coverage_sd = 1.96 * sd(covered, na.rm = TRUE) / sqrt(n())
+  ) |>
+  ggplot(aes(x = delta, y = coverage, color = pair, group = pair)) +
+  geom_hline(yintercept = 0.95, linetype = "dashed", color = "red") +
+  geom_errorbar(aes(
+    ymin = pmax(0, coverage - coverage_sd),
+    ymax = pmin(1, coverage + coverage_sd)
+  ), width = 0.2, position = position_dodge(width = 0.4)) +
+  geom_point(size = 3, position = position_dodge(width = 0.4)) +
+  coord_cartesian(ylim = c(0.8, 1)) +
+  facet_wrap(~psi, ncol = 3, labeller = labeller(psi = function(x) paste0("\u03C8: ", x))) +
+  labs(x = "\u03B4", y = "Coverage", color = NULL) +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal"
+  )
+# ggtitle("ReML 95% CI Coverage")
+ggsave("plots/reml_95_ci_coverage.pdf", p_reml_95, width = 10, height = 4, device = cairo_pdf)
+
+p_all_95 <- coverage_results |>
+  filter(abs(as.numeric(as.character(level)) - 0.95) < 1e-5) |>
+  mutate(
+    setting = factor(paste(delta, psi, sep = "-")),
+    pair = forcats::fct_recode(factor(rho_true), "r12" = "0", "r13" = "0.35", "r23" = "0.6")
+  ) |>
+  group_by(method, delta, psi, pair) |>
+  summarize(
+    coverage = mean(covered, na.rm = TRUE),
+    coverage_sd = 1.96 * sd(covered, na.rm = TRUE) / sqrt(n())
+  ) |>
+  ggplot(aes(x = delta, y = coverage, color = pair, group = pair)) +
+  geom_hline(yintercept = 0.95, linetype = "dashed", color = "red") +
+  geom_errorbar(aes(
+    ymin = pmax(0, coverage - coverage_sd),
+    ymax = pmin(1, coverage + coverage_sd)
+  ), width = 0.2, position = position_dodge(width = 0.4)) +
+  geom_point(size = 3, position = position_dodge(width = 0.4)) +
+  coord_cartesian(ylim = c(0.6, 1)) +
+  facet_grid(method ~ psi, labeller = labeller(psi = function(x) paste0("\u03C8: ", x))) +
+  labs(x = "\u03B4", y = "Coverage", color = NULL) +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal"
+  )
+# ggtitle("ReML 95% CI Coverage")
+p_all_95
+ggsave("plots/all_95_ci_coverage.pdf", p_all_95, width = 10, height = 4, device = cairo_pdf)
