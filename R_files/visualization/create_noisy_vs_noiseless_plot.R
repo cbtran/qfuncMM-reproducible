@@ -50,14 +50,14 @@ noisy_vs_noiseless_df <- lapply(csv_files, function(f) {
   df
 }) %>% bind_rows()
 
-# write_csv(noisy_vs_noiseless_df, "out/noisy_vs_noiseless.csv")
+write_csv(noisy_vs_noiseless_df, "out/noisy_vs_noiseless.csv")
 
 noisy_vs_noiseless_df <- read_csv("out/noisy_vs_noiseless.csv", col_types = "iiiddddddddddffff")
 
 noisy_vs_noiseless_df <- noisy_vs_noiseless_df |>
   mutate(
     pair = factor(paste0("r", region1_uniqid, region2_uniqid)),
-    rho_true = ifelse(pair == "r12", 0.1, ifelse(pair == "r13", 0.35, 0.6))
+    rho_true = ifelse(pair == "r12", 0, ifelse(pair == "r13", 0.35, 0.6))
   ) |>
   select(delta, psi, pair, rho, rho_true, noise_level, noisy)
 
@@ -74,13 +74,13 @@ rmse_df <- noisy_vs_noiseless_df |>
 p <- rmse_df |>
   filter(delta == "mid", psi == "mid") |>
   ggplot(aes(x = noise_level, y = mad, color = noisy, linetype = pair, group = interaction(noisy, pair))) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
+  geom_line() +
+  geom_point() +
   labs(x = "Noise Level", y = "Mean absolute deviation") +
   theme_minimal() +
   theme(legend.position = "bottom", legend.title = element_blank())
 
 outfile <- "plots/noisy_vs_noiseless.pdf"
-cairo_pdf(outfile, width = 10, height = 7, onefile = TRUE)
+cairo_pdf(outfile, width = 10, height = 4, onefile = TRUE)
 print(p)
 dev.off()
