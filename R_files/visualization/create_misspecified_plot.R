@@ -8,28 +8,16 @@ ggthemr::ggthemr("fresh")
 # Example command to run the script:
 # >Rscript create_plots.R out std noisy 1 FALSE plots
 args <- commandArgs(trailingOnly = TRUE)
-# args <- c("out", "nonsep", "noisy", 1, FALSE, "plots")
+# args <- c("out", "nonsep", "plots")
 results_dir <- args[1]
 data_spec <- args[2]
-cov_setting <- args[3]
-noise_level <- args[4]
-use_vecchia <- as.logical(args[5])
-plots_dir <- args[6]
+plots_dir <- args[3]
 
 # Construct the directory path
-stage2_dir <- ifelse(use_vecchia, "stage2_vecchia", "stage2_reml")
-if (noise_level != "1") {
-  data_spec <- paste0(data_spec, "-noise-", noise_level)
-}
-if (cov_setting == "noiseless") {
-  stage2_dir <- paste0(stage2_dir, "_noiseless")
-}
+stage2_dir <- "stage2_reml"
 dir_path <- file.path(results_dir, data_spec, stage2_dir)
 
 kang_dir <- file.path(results_dir, data_spec, "stage2_kang")
-if (cov_setting == "noiseless") {
-  kang_dir <- paste0(kang_dir, "_noiseless")
-}
 
 # List all CSV files in the directory that match the cov_setting
 csv_pattern <- paste0("results_.*\\.csv$")
@@ -93,7 +81,7 @@ ggdf <- tidyr::pivot_longer(all_data,
 )
 ggdf$method <- factor(ggdf$method,
   levels = c("rho", "rho_eblue", "rho_ca", "rho_kang"),
-  labels = c("ReML", "EBLUE", "CA", "Kang")
+  labels = c("ReML", "EBLUE", "CA", "ACE")
 )
 ggdf$pair <- factor(paste0("r", ggdf$region1_uniqid, ggdf$region2_uniqid))
 ggdf$yintercept <- ifelse(ggdf$pair == "r12", 0, ifelse(ggdf$pair == "r13", 0.35, 0.6))
@@ -130,9 +118,6 @@ p <- ggplot(ggdf) +
 dir.create(plots_dir, showWarnings = FALSE)
 
 outfile <- file.path(plots_dir, paste0(data_spec, ".pdf"))
-if (cov_setting == "noiseless") {
-  outfile <- file.path(plots_dir, paste0(data_spec, "-noiseless.pdf"))
-}
 cairo_pdf(outfile, width = 10, height = 7, onefile = TRUE)
 print(p)
 dev.off()

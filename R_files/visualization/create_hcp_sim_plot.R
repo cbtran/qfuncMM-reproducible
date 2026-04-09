@@ -69,7 +69,7 @@ ggdf <- tidyr::pivot_longer(all_data,
 
 ggdf$method <- factor(ggdf$method,
   levels = c("rho", "rho_eblue", "rho_ca", "rho_kang"),
-  labels = c("Vecchia", "EBLUE", "CA", "Kang")
+  labels = c("Vecchia", "EBLUE", "CA", "ACE")
 )
 
 ggdf$pair <- factor(paste0("r", ggdf$region1_uniqid, ggdf$region2_uniqid))
