@@ -491,8 +491,13 @@ p_all_95 <- coverage_results |>
     ymax = pmin(1, coverage + coverage_sd)
   ), width = 0.2, position = position_dodge(width = 0.4)) +
   geom_point(size = 3, position = position_dodge(width = 0.4)) +
-  coord_cartesian(ylim = c(0.6, 1)) +
-  facet_grid(method ~ psi, labeller = labeller(psi = function(x) paste0("\u03C8: ", x))) +
+  # coord_cartesian(ylim = c(0.3, 1)) +
+  facet_grid(method ~ psi,
+    labeller = labeller(
+      method = c("reml" = "ReML", "vecchia" = "Vecchia", "ca" = "CA", "ca_adjusted" = "CA adjusted"),
+      psi = function(x) paste0("\u03C8: ", x)
+    )
+  ) +
   labs(x = "\u03B4", y = "Coverage", color = NULL) +
   theme(
     legend.position = "bottom",
@@ -500,4 +505,37 @@ p_all_95 <- coverage_results |>
   )
 # ggtitle("ReML 95% CI Coverage")
 p_all_95
-ggsave("plots/all_95_ci_coverage.pdf", p_all_95, width = 10, height = 4, device = cairo_pdf)
+ggsave("plots/all_95_ci_coverage.pdf", p_all_95, width = 10, height = 10, device = cairo_pdf)
+
+p_vec_ca_adj_95 <- coverage_results |>
+  filter(method %in% c("vecchia", "ca_adjusted"), abs(as.numeric(as.character(level)) - 0.95) < 1e-5) |>
+  mutate(
+    setting = factor(paste(delta, psi, sep = "-")),
+    pair = forcats::fct_recode(factor(rho_true), "r12" = "0", "r13" = "0.35", "r23" = "0.6")
+  ) |>
+  group_by(method, delta, psi, pair) |>
+  summarize(
+    coverage = mean(covered, na.rm = TRUE),
+    coverage_sd = 1.96 * sd(covered, na.rm = TRUE) / sqrt(n())
+  ) |>
+  ggplot(aes(x = delta, y = coverage, color = pair, group = pair)) +
+  geom_hline(yintercept = 0.95, linetype = "dashed", color = "red") +
+  geom_errorbar(aes(
+    ymin = pmax(0, coverage - coverage_sd),
+    ymax = pmin(1, coverage + coverage_sd)
+  ), width = 0.2, position = position_dodge(width = 0.4)) +
+  geom_point(size = 3, position = position_dodge(width = 0.4)) +
+  coord_cartesian(ylim = c(0.6, 1)) +
+  facet_grid(method ~ psi,
+    labeller = labeller(
+      method = c("vecchia" = "Vecchia", "ca_adjusted" = "CA adjusted"),
+      psi = function(x) paste0("\u03C8: ", x)
+    )
+  ) +
+  labs(x = "\u03B4", y = "Coverage", color = NULL) +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal"
+  )
+p_vec_ca_adj_95
+ggsave("plots/vecchia_ca_adj_95_ci_coverage.pdf", p_vec_ca_adj_95, width = 10, height = 4, device = cairo_pdf)
