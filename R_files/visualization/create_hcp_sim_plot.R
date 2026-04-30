@@ -31,7 +31,7 @@ all_data <- do.call(rbind, lapply(
     df
   }
 )) |>
-  select(simid, region1_uniqid, region2_uniqid, delta, psi, rho, rho_ca, rho_eblue) |>
+  select(simid, region1_uniqid, region2_uniqid, delta, psi, rho, rho_ca, rho_eblue, wall_time_s) |>
   as_tibble()
 
 dir_path_kang <- file.path(results_dir, stage2_dir[2])
@@ -107,3 +107,11 @@ p <- ggdf |>
 cairo_pdf(file.path(plots_dir, "hcp_sim.pdf"), width = 10, height = 7, onefile = TRUE)
 print(p)
 dev.off()
+
+message("Average wall time (seconds) by region pair:")
+all_data |>
+  group_by(region1_uniqid, region2_uniqid) |>
+  summarize(
+    avg_wall = mean(wall_time_s, na.rm = TRUE),
+    sd_wall = sd(wall_time_s, na.rm = TRUE)
+  )
