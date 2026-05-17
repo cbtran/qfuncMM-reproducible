@@ -17,7 +17,7 @@ USER rstudio
 
 RUN pip install radian && \
     install2.r languageserver httpgd && \
-    installGithub.r ManuelHentschel/vscDebugger cbtran/qfuncMM@dev Mikata-Project/ggthemr
+    installGithub.r ManuelHentschel/vscDebugger roobnloo/qfuncMM Mikata-Project/ggthemr
 
 
 RUN install2.r ggpubr corrplot latex2exp Matrix xtable ggridges kableExtra tictoc here patchwork waveslim nleqslv
